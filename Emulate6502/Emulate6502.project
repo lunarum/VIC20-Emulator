@@ -96,5 +96,9 @@
     <File Name="main.c"/>
     <File Name="cpu.h"/>
     <File Name="cpu.c"/>
+    <File Name="memory.h"/>
+    <File Name="memory.c"/>
+    <File Name="opcodes.h"/>
+    <File Name="cpu_run.c"/>
   </VirtualDirectory>
 </CodeLite_Project>

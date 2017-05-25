@@ -13,7 +13,7 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=rma10426
-Date                   :=17/05/2017
+Date                   :=07/06/2017
 CodeLitePath           :="D:/Program Files/CodeLite"
 LinkerName             :=D:/TDM-GCC-64/bin/g++.exe
 SharedObjectLinkerName :=D:/TDM-GCC-64/bin/g++.exe -shared -fPIC
@@ -62,7 +62,7 @@ AS       := D:/TDM-GCC-64/bin/as.exe
 ## User defined environment variables
 ##
 CodeLiteDir:=D:\Program Files\CodeLite
-Objects0=$(IntermediateDirectory)/main.c$(ObjectSuffix) 
+Objects0=$(IntermediateDirectory)/main.c$(ObjectSuffix) $(IntermediateDirectory)/cpu.c$(ObjectSuffix) $(IntermediateDirectory)/memory.c$(ObjectSuffix) $(IntermediateDirectory)/cpu_run.c$(ObjectSuffix) 
 
 
 
@@ -100,6 +100,30 @@ $(IntermediateDirectory)/main.c$(DependSuffix): main.c
 
 $(IntermediateDirectory)/main.c$(PreprocessSuffix): main.c
 	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/main.c$(PreprocessSuffix) main.c
+
+$(IntermediateDirectory)/cpu.c$(ObjectSuffix): cpu.c $(IntermediateDirectory)/cpu.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "D:/Data/rma10426/Documents/Emulator/Emulate6502/cpu.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/cpu.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/cpu.c$(DependSuffix): cpu.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/cpu.c$(ObjectSuffix) -MF$(IntermediateDirectory)/cpu.c$(DependSuffix) -MM cpu.c
+
+$(IntermediateDirectory)/cpu.c$(PreprocessSuffix): cpu.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/cpu.c$(PreprocessSuffix) cpu.c
+
+$(IntermediateDirectory)/memory.c$(ObjectSuffix): memory.c $(IntermediateDirectory)/memory.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "D:/Data/rma10426/Documents/Emulator/Emulate6502/memory.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/memory.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/memory.c$(DependSuffix): memory.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/memory.c$(ObjectSuffix) -MF$(IntermediateDirectory)/memory.c$(DependSuffix) -MM memory.c
+
+$(IntermediateDirectory)/memory.c$(PreprocessSuffix): memory.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/memory.c$(PreprocessSuffix) memory.c
+
+$(IntermediateDirectory)/cpu_run.c$(ObjectSuffix): cpu_run.c $(IntermediateDirectory)/cpu_run.c$(DependSuffix)
+	$(CC) $(SourceSwitch) "D:/Data/rma10426/Documents/Emulator/Emulate6502/cpu_run.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/cpu_run.c$(ObjectSuffix) $(IncludePath)
+$(IntermediateDirectory)/cpu_run.c$(DependSuffix): cpu_run.c
+	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/cpu_run.c$(ObjectSuffix) -MF$(IntermediateDirectory)/cpu_run.c$(DependSuffix) -MM cpu_run.c
+
+$(IntermediateDirectory)/cpu_run.c$(PreprocessSuffix): cpu_run.c
+	$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/cpu_run.c$(PreprocessSuffix) cpu_run.c
 
 
 -include $(IntermediateDirectory)/*$(DependSuffix)

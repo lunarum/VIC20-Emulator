@@ -1,1 +1,1 @@
-./Debug/main.c.o   
+./Debug/main.c.o ./Debug/cpu.c.o ./Debug/memory.c.o ./Debug/cpu_run.c.o   
