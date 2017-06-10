@@ -139,13 +139,13 @@ word memory_getIndirectAbsoluteAddress() {
     byte lowByte = memory_getImmediate();
     byte highByte = memory_getImmediate();
     word address = getAddress(lowByte, highByte);
-    lowByte = memory_get(address);
+    byte low2Byte = memory_get(address);
     if(lowByte == 0xFF)
         address &= 0xFF00;  /* 6502 bug: dont cross page boundary */
     else
         ++address;
-    highByte = memory_get(address);
-    return getAddress(lowByte, highByte);
+    byte high2Byte = memory_get(address);
+    return getAddress(low2Byte, high2Byte);
 }
 
 /*
@@ -191,7 +191,7 @@ void memory_setAbsoluteIndexedY(byte value) {
  */
  
 byte memory_getZeroPageIndexedX() {
-    byte addressZ = memory_getImmediate() + cpu.Y;    /* don't leave zero page */
+    byte addressZ = memory_getImmediate() + cpu.X;    /* don't leave zero page */
     return memory_getZero(addressZ);
 }
 
@@ -201,7 +201,7 @@ byte memory_getZeroPageIndexedY() {
 }
 
 void memory_setZeroPageIndexedX(byte value) {
-    byte addressZ = memory_getImmediate() + cpu.Y;    /* don't leave zero page */
+    byte addressZ = memory_getImmediate() + cpu.X;    /* don't leave zero page */
     memory_setZero(addressZ, value);
 }
 
@@ -247,16 +247,16 @@ void memory_setIndexedIndirectX(byte value) {
  
 byte memory_getIndirectIndexedY() {
     byte addressZ = memory_getImmediate();
-    byte lowByte = memory_getZeroPage(addressZ++);
-    byte highByte = memory_getZeroPage(addressZ);
+    byte lowByte = memory_getZero(addressZ++);
+    byte highByte = memory_getZero(addressZ);
     word address = getAddress(lowByte, highByte) + cpu.Y;
     return memory_get(address);
 }
 
 void memory_setIndirectIndexedY(byte value) {
     byte addressZ = memory_getImmediate();
-    byte lowByte = memory_getZeroPage(addressZ++);
-    byte highByte = memory_getZeroPage(addressZ);
+    byte lowByte = memory_getZero(addressZ++);
+    byte highByte = memory_getZero(addressZ);
     word address = getAddress(lowByte, highByte) + cpu.Y;
     memory_set(address, value);
 }

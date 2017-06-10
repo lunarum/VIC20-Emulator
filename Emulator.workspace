@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CodeLite_Workspace Name="Emulator" Database="" Version="10.0.0">
-  <Project Name="Emulate6502" Path="Emulate6502/Emulate6502.project" Active="Yes"/>
+  <Project Name="Emulate6502" Path="Emulate6502/Emulate6502.project" Active="No"/>
+  <Project Name="Test" Path="Test/Test.project" Active="Yes"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Environment/>
       <Project Name="Emulate6502" ConfigName="Debug"/>
+      <Project Name="Test" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Release" Selected="no">
       <Environment/>
       <Project Name="Emulate6502" ConfigName="Release"/>
+      <Project Name="Test" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>
