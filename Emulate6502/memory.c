@@ -64,16 +64,16 @@ word memory_stackPullAddress() {
     last_address = 0x0100 | ++cpu.SP;    /* stay on stack page! */
     byte lowByte = memory[last_address]; /* low-byte first */
     last_address = 0x0100 | ++cpu.SP;    /* stay on stack page! */
-    byte highByte = memory[last_address]; /* high-byte last */
+    byte highByte = memory[last_address];/* high-byte last */
     return getAddress(lowByte, highByte);
 }
 
 void memory_stackPushAddress(word address) {
     /* assume stack page is writable, therefore don't check */
-    last_address = 0x0100 | cpu.SP--;             /* stay on stack page! */
-    memory[last_address] = (address & 0xFF00) >> 8; /* high-byte first */
-    last_address = 0x0100 | cpu.SP--;             /* stay on stack page! */
-    memory[last_address] = (address & 0xFF);      /* low-byte last */
+    last_address = 0x0100 | cpu.SP--;       /* stay on stack page! */
+    memory[last_address] = address >> 8;    /* high-byte first */
+    last_address = 0x0100 | cpu.SP--;       /* stay on stack page! */
+    memory[last_address] = (address & 0xFF);/* low-byte last */
 }
 /*
     Immediate Addressing
@@ -92,6 +92,12 @@ byte memory_getImmediate() {
     The value given is the address (16-bits) of a memory location that contains the 8-bit value to be used.
     For example, STA $3E32 stores the present value of the accumulator in memory location $3E32.
  */
+
+word memory_getAbsoluteAddress() {
+    byte lowByte = memory_getImmediate();
+    byte highByte = memory_getImmediate();
+    return getAddress(lowByte, highByte);
+}
 
 byte memory_getAbsolute() {
     byte lowByte = memory_getImmediate();
@@ -160,6 +166,8 @@ byte memory_getAbsoluteIndexedX() {
     byte lowByte = memory_getImmediate();
     byte highByte = memory_getImmediate();
     word address = getAddress(lowByte, highByte) + cpu.X;
+    if(getPage(address) != highByte) // crossong page boundary adds extra cycle
+        ++cpu.cycles;
     return memory_get(address);
 }
 
@@ -167,6 +175,8 @@ byte memory_getAbsoluteIndexedY() {
     byte lowByte = memory_getImmediate();
     byte highByte = memory_getImmediate();
     word address = getAddress(lowByte, highByte) + cpu.Y;
+    if(getPage(address) != highByte) // crossong page boundary adds extra cycle
+        ++cpu.cycles;
     return memory_get(address);
 }
 
@@ -174,6 +184,8 @@ void memory_setAbsoluteIndexedX(byte value) {
     byte lowByte = memory_getImmediate();
     byte highByte = memory_getImmediate();
     word address = getAddress(lowByte, highByte) + cpu.X;
+    if(getPage(address) != highByte) // crossong page boundary adds extra cycle
+        ++cpu.cycles;
     memory_set(address, value);
 }
 
@@ -181,6 +193,8 @@ void memory_setAbsoluteIndexedY(byte value) {
     byte lowByte = memory_getImmediate();
     byte highByte = memory_getImmediate();
     word address = getAddress(lowByte, highByte) + cpu.Y;
+    if(getPage(address) != highByte) // crossong page boundary adds extra cycle
+        ++cpu.cycles;
     memory_set(address, value);
 }
 
@@ -281,6 +295,8 @@ word memory_getRelativeAddress() {
     if(offset & 0x80)  /* Two's complement negative number */
         offset -= 256;
     word address = cpu.PC + offset;
+    if(getPage(address) != getPage(cpu.PC)) // crossong page boundary adds extra cycle
+        ++cpu.cycles;
     return address;
 }
 

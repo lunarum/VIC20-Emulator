@@ -82,6 +82,8 @@ typedef enum { false = 0, true = !false } bool;
 
 #include "memory.h"
 
+typedef enum { RESULT_NMI, RESULT_RESET, RESULT_IRQ, RESULT_ILLEGAL_INSTUCTION} cpu_result;
+
 extern struct registers {
     byte A,      /*< Accumulator */
          X,      /*< X index */
@@ -89,6 +91,7 @@ extern struct registers {
          SP;     /*< Stack Pointer offset (from page 1) */
     word PC;     /*< Program Counter */
     bool PS_N, PS_V, PS_B, PS_D, PS_I, PS_Z, PS_C;
+    byte cycles; /* cycles count of current instruction */
 } cpu;
 extern bool single_step;
 extern int cycle_counter;
@@ -101,21 +104,32 @@ extern void cpu_statusPull(void);
 extern void cpu_disassemble(word address);
 extern void cpu_logStatus(void);
 
-extern void cpu_run(void);
+extern cpu_result cpu_run(void);
 
 static inline bool bitGet(byte by, byte bit) { return ((by & 1 << bit) >> bit); }
 static inline void bitSet(byte by, byte bit, bool value) { if(value) by |= 1 << bit; else by &= ~(1 << bit); }
 
+static inline byte cpu_get_state() {
+    return((byte) 0x20
+        | ((cpu.PS_N) ? 0x80 : 0)
+        | ((cpu.PS_V) ? 0x40 : 0)
+        | ((cpu.PS_B) ? 0x10 : 0)
+        | ((cpu.PS_D) ? 0x08 : 0)
+        | ((cpu.PS_I) ? 0x04 : 0)
+        | ((cpu.PS_Z) ? 0x02 : 0)
+        | ((cpu.PS_C) ? 0x01 : 0));
+}
+
 static inline void cpu_IRQ() {
     memory_stackPushAddress(cpu.PC+1);
-    cpu_statusPush();
+    memory_stackPush(cpu_get_state());
     cpu.PS_B = false;
     cpu.PC = MEM_IRQ_BREAK;
 }
 
 static inline void cpu_NMI() {
     memory_stackPushAddress(cpu.PC+1);
-    cpu_statusPush();
+    memory_stackPush(cpu_get_state());
     cpu.PC = MEM_NMI;
 }
 

@@ -17,30 +17,24 @@ void cpu_setCycleReset(int value) {
 void cpu_RESET() {
     cpu.SP = MEM_PAGE_SIZE;
     cpu.PC = MEM_RESET;
+    cpu.cycles = 0;
     cycle_counter = cycle_reset;
 }
 
 void cpu_statusPush(void) {
-    byte value = 0x20;
-    if(cpu.PS_N) value |= 0x80;
-    if(cpu.PS_V) value |= 0x40;
-    if(cpu.PS_B) value |= 0x10;
-    if(cpu.PS_D) value |= 0x08;
-    if(cpu.PS_I) value |= 0x04;
-    if(cpu.PS_Z) value |= 0x02;
-    if(cpu.PS_C) value |= 0x01;
+    byte value = cpu_get_state();
     memory_stackPush(value);
 }
 
 void cpu_statusPull(void) {
     byte value = memory_stackPull();
-    cpu.PS_N =  (bool)(value & 0x80);
-    cpu.PS_V =  (bool)(value & 0x40);
-    cpu.PS_B =  (bool)(value & 0x10);
-    cpu.PS_D =  (bool)(value & 0x08);
-    cpu.PS_I =  (bool)(value & 0x04);
-    cpu.PS_Z =  (bool)(value & 0x02);
-    cpu.PS_C =  (bool)(value & 0x01);
+    cpu.PS_N = ((value & 0x80) != 0);
+    cpu.PS_V = ((value & 0x40) != 0);
+    cpu.PS_B = ((value & 0x10) != 0);
+    cpu.PS_D = ((value & 0x08) != 0);
+    cpu.PS_I = ((value & 0x04) != 0);
+    cpu.PS_Z = ((value & 0x02) != 0);
+    cpu.PS_C = ((value & 0x01) != 0);
 }
 
 void cpu_disassemble(word address) {
@@ -58,6 +52,7 @@ void cpu_disassemble(word address) {
                 b1 = memory_get(address++);
                 fprintf(stderr, "#%02X", (int)b1);
                 break;
+            case AM_ABA: /* Absolute: aaaa */
             case AM_ABS: /* Absolute: aaaa */
                 b1 = memory_get(address++);
                 b2 = memory_get(address++);

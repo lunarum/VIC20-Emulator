@@ -61,6 +61,7 @@ extern word memory_stackPullAddress();
 extern void memory_stackPushAddress(word address);
 
 extern byte memory_getImmediate();
+extern word memory_getAbsoluteAddress();
 extern byte memory_getAbsolute();
 extern void memory_setAbsolute(byte value);
 extern byte memory_getZeroPage();
