@@ -7,7 +7,7 @@ static byte pageType[256];
 static word last_address;
 
 
-extern byte *memory_get_ptr(word startAddress) {
+byte *memory_get_ptr(word startAddress) {
     return memory + startAddress;
 }
 

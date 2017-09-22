@@ -1,8 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<CodeLite_Project Name="Emulate6502" Version="10.0.0" InternalType="Console">
+<CodeLite_Project Name="Emulator" Version="10.0.0" InternalType="Console">
+  <Plugins>
+    <Plugin Name="qmake">
+      <![CDATA[00010001N0005Debug000000000000]]>
+    </Plugin>
+  </Plugins>
+  <Reconciliation>
+    <Regexes/>
+    <Excludepaths/>
+    <Ignorefiles/>
+    <Extensions>
+      <![CDATA[c;h]]>
+    </Extensions>
+    <Topleveldir>../Emulate6502</Topleveldir>
+  </Reconciliation>
   <Description/>
   <Dependencies/>
-  <Settings Type="Executable">
+  <VirtualDirectory Name="src">
+    <File Name="main.c"/>
+    <File Name="cpu.c"/>
+    <File Name="memory.c"/>
+    <File Name="cpu_run.c"/>
+    <File Name="VIC-20.c"/>
+    <File Name="rom_basic.c"/>
+    <File Name="rom_character.c"/>
+    <File Name="rom_kernal.c"/>
+    <File Name="vic.c"/>
+  </VirtualDirectory>
+  <VirtualDirectory Name="include">
+    <File Name="cpu.h"/>
+    <File Name="memory.h"/>
+    <File Name="opcodes.h"/>
+    <File Name="VIC-20.h"/>
+    <File Name="graphics.h"/>
+    <File Name="vic.h"/>
+  </VirtualDirectory>
+  <Settings Type="Static Library">
     <GlobalSettings>
       <Compiler Options="" C_Options="" Assembler="">
         <IncludePath Value="."/>
@@ -12,13 +45,13 @@
       </Linker>
       <ResourceCompiler Options=""/>
     </GlobalSettings>
-    <Configuration Name="Debug" CompilerType="MinGW ( TDM-GCC-64 )" DebuggerType="GNU gdb debugger" Type="Executable" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
+    <Configuration Name="Debug" CompilerType="MinGW ( TDM-GCC-64 )" DebuggerType="GNU gdb debugger" Type="Static Library" BuildCmpWithGlobalSettings="append" BuildLnkWithGlobalSettings="append" BuildResWithGlobalSettings="append">
       <Compiler Options="-g;-O0;-Wall" C_Options="-g;-O0;-Wall" Assembler="" Required="yes" PreCompiledHeader="" PCHInCommandLine="no" PCHFlags="" PCHFlagsPolicy="0">
         <IncludePath Value="."/>
       </Compiler>
       <Linker Options="" Required="yes"/>
       <ResourceCompiler Options="" Required="no"/>
-      <General OutputFile="$(IntermediateDirectory)/$(ProjectName)" IntermediateDirectory="./Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
+      <General OutputFile="$(IntermediateDirectory)/lib$(ProjectName).a" IntermediateDirectory="./Debug" Command="./$(ProjectName)" CommandArguments="" UseSeparateDebugArgs="no" DebugArguments="" WorkingDirectory="$(IntermediateDirectory)" PauseExecWhenProcTerminates="yes" IsGUIProgram="no" IsEnabled="yes"/>
       <BuildSystem Name="Default"/>
       <Environment EnvVarSetName="&lt;Use Defaults&gt;" DbgSetName="&lt;Use Defaults&gt;">
         <![CDATA[]]>
@@ -92,15 +125,6 @@
       </Completion>
     </Configuration>
   </Settings>
-  <VirtualDirectory Name="src">
-    <File Name="main.c"/>
-    <File Name="cpu.c"/>
-    <File Name="memory.c"/>
-    <File Name="cpu_run.c"/>
-  </VirtualDirectory>
-  <VirtualDirectory Name="include">
-    <File Name="cpu.h"/>
-    <File Name="memory.h"/>
-    <File Name="opcodes.h"/>
-  </VirtualDirectory>
+  <Dependencies Name="Debug"/>
+  <Dependencies Name="Release"/>
 </CodeLite_Project>
