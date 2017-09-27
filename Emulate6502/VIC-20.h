@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef VIC_20_H
+#define VIC_20_H
 
 #include "cpu.h"
 #include "memory.h"

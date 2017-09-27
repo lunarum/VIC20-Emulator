@@ -1,0 +1,1 @@
+./Debug/main.c.o ./Debug/test_memory.c.o ./Debug/test_opcodes.c.o   
