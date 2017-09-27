@@ -154,7 +154,7 @@ void vic_plot_scan_line() {
             printf("-O\n");
     } else {
         // screen
-        printf("-S [");
+        printf("-S ");
         
         // Left border
         draw_line(0, line, min_x, line, border_color);        
@@ -162,7 +162,8 @@ void vic_plot_scan_line() {
         
         unsigned x = min_x;
         unsigned row = wide_characters ? ((line - min_y) >> 5) : ((line - min_y) >> 4);
-        unsigned index = wide_characters ? (line - min_y + (row << 5)) : (line - min_y + (row << 4));
+        printf("%02u [", row);
+        unsigned index = wide_characters ? (((line - min_y) >> 1) + (row << 5)) : (((line - min_y) >> 1) + (row << 4));
         for(unsigned column = 0; column < columns; ++column) {
             // background
             draw_line(x, line,   x+31, line,   screen_color);
@@ -174,7 +175,7 @@ void vic_plot_scan_line() {
             unsigned pixel_index = index + (wide_characters ? (character << 4) : (character << 3));
             unsigned pixels = memory[character_address + pixel_index];
 
-            printf("%c%02X|", character, pixels);
+            printf("%02X%02X%02X|", (unsigned)character, pixel_index, pixels);
 
             if(pixels & 0x80) {
                 draw_line(x, line,   x+3, line,   color);

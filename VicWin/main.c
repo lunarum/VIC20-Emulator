@@ -82,8 +82,10 @@ int main(int argc, char* argv[]){
     SDL_RenderClear(renderer);
     
     vic20_config(0);    // Default 5K VIC-20
+    // Fill with characters; 22x23 locations (=506) are visible
     byte *screen_memory = memory_get_ptr(0x1E00);
-    sprintf(screen_memory, "HELLO VIC WORLD");
+    for(int i = 0; i < 506; ++i)
+        screen_memory[i] = i;
     for(int scan = 0; scan < FRAME_LINES; ++scan) {
         vic_plot_scan_line();
     }
