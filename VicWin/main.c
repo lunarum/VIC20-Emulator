@@ -3,22 +3,39 @@
 #include "VIC-20.h"
 #include "graphics.h"
 
-#define BLACK   0x000000
-#define WHITE   0xffffff
-#define RED     0x782922
-#define CYAN    0x87d6dd
-#define PURPLE  0xa95fb6
-#define GREEN   0x56a049
-#define BLUE    0x40318e
-#define YELLOW  0xbfce73
-#define ORANGE          0xaa7448
-#define LIGHT_ORANGE    0xeab488
-#define PINK            0xb86962
-#define LIGHT_CYAN      0xc7ffff
-#define LIGHT_PURPLE    0xe99ff6
-#define LIGHT_GREEN     0x94e088
-#define LIGHT_BLUE      0x8071cc
-#define LIGHT_YELLOW    0xfeffb3
+// VICE palette without dither
+#define BLACK           0x000000
+#define WHITE           0xffffff
+#define RED             0xB61F21
+#define CYAN            0x4DF0FF
+#define PURPLE          0xB43FFF
+#define GREEN           0x44E237
+#define BLUE            0x1A34FF
+#define YELLOW          0xDCD71B
+#define ORANGE          0xCA5400
+#define LIGHT_ORANGE    0xE9B072
+#define LIGHT_RED       0xE79293
+#define LIGHT_CYAN      0x9AF7FD
+#define LIGHT_PURPLE    0xE09FFF
+#define LIGHT_GREEN     0x8FE493
+#define LIGHT_BLUE      0x8290FF
+#define LIGHT_YELLOW    0xE5DE85
+//#define BLACK           0x000000
+//#define WHITE           0xffffff
+//#define RED             0x782922
+//#define CYAN            0x87d6dd
+//#define PURPLE          0xa95fb6
+//#define GREEN           0x56a049
+//#define BLUE            0x40318e
+//#define YELLOW          0xbfce73
+//#define ORANGE          0xaa7448
+//#define LIGHT_ORANGE    0xeab488
+//#define PINK            0xb86962
+//#define LIGHT_CYAN      0xc7ffff
+//#define LIGHT_PURPLE    0xe99ff6
+//#define LIGHT_GREEN     0x94e088
+//#define LIGHT_BLUE      0x8071cc
+//#define LIGHT_YELLOW    0xfeffb3
 
 SDL_Renderer *renderer;
 
@@ -80,12 +97,26 @@ int main(int argc, char* argv[]){
 	
     //First clear the renderer
     SDL_RenderClear(renderer);
-    
-    vic20_config(0);    // Default 5K VIC-20
-    // Fill with characters; 22x23 locations (=506) are visible
+
+    // Default 5K VIC-20
+    vic20_config(0);
+    // Fill with characters
     byte *screen_memory = memory_get_ptr(0x1E00);
-    for(int i = 0; i < 506; ++i)
-        screen_memory[i] = i;
+    for(int i = 0; i < 256; ++i)
+        *screen_memory++ = (byte)i;
+    // Fill with colors
+    byte *color_memory = memory_get_ptr(0x9600);
+    byte color = 0;
+    for(int r = 0; r < 23; ++r) {
+        for(int c = 0; c < 22; ++c) {
+            *color_memory++ = 10;//color;
+        }
+        color = (color + 1) & 0x07;
+        if(color == 1)
+            ++color; // Skip white as it's the default background color
+    }
+
+    // draw screen
     for(int scan = 0; scan < FRAME_LINES; ++scan) {
         vic_plot_scan_line();
     }

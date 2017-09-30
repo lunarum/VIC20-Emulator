@@ -131,6 +131,8 @@ void vic_plot_scan_line() {
     unsigned max_y = min_y + (wide_characters ? (rows<<5) : (rows<<4));
     unsigned max_x = min_x + (columns<<5);
     unsigned line = scan_line << 1;
+    
+    unsigned multi_color_palette[4] = { screen_color, border_color, CLR_BLACK, auxilary_color };
 
     if(!scan_line)
         printf("chars=$%04X screen=$%04X color=$%04X ox=%03u oy=%03u rc=%02ux%02u mmx=%03u-%03u mmy=%03u-%03u bc=%02u sc=%02u ac=%02u\n",
@@ -143,7 +145,7 @@ void vic_plot_scan_line() {
     
     printf("plot(sl=%03u)", scan_line);
 
-    if(line < min_y || line > max_y) {
+    if(line < min_y || line >= max_y) {
         if(line < SCREEN_HEIGHT) {
             printf("-B\n");
             // border
@@ -163,52 +165,101 @@ void vic_plot_scan_line() {
         unsigned x = min_x;
         unsigned row = wide_characters ? ((line - min_y) >> 5) : ((line - min_y) >> 4);
         printf("%02u [", row);
-        unsigned index = wide_characters ? (((line - min_y) >> 1) + (row << 5)) : (((line - min_y) >> 1) + (row << 4));
-        for(unsigned column = 0; column < columns; ++column) {
-            // background
-            draw_line(x, line,   x+31, line,   screen_color);
-            draw_line(x, line+1, x+31, line+1, screen_color);
-            
+        unsigned line_index = wide_characters ? ((scan_line - offset_y) & 0x0F) : ((scan_line - offset_y) & 0x07);
+        for(unsigned column = 0; column < columns; ++column) {            
             unsigned char_index = row*columns + column;
-            unsigned color = color_palette[memory[color_address + char_index] & 0x0F];
-            unsigned character = memory[screen_address + char_index];
-            unsigned pixel_index = index + (wide_characters ? (character << 4) : (character << 3));
-            unsigned pixels = memory[character_address + pixel_index];
+            byte     color       = memory[color_address + char_index];
+            multi_color_palette[2] = color_palette[color & 0x07];
+            bool     multi_color = (color & 0x08);
+            color &= 0x07;  // strip multi-color bit from color index
+            unsigned character   = memory[screen_address + char_index];
+            unsigned pixel_index = line_index + (wide_characters ? (character << 4) : (character << 3));
+            unsigned pixels      = memory[character_address + pixel_index];
 
-            printf("%02X%02X%02X|", (unsigned)character, pixel_index, pixels);
+            printf("%02X%c%u-%02X|", (unsigned)character, multi_color ? 'M' : 'H', (unsigned)color, pixels);
 
-            if(pixels & 0x80) {
-                draw_line(x, line,   x+3, line,   color);
-                draw_line(x, line+1, x+3, line+1, color);
-            } x += 4;
-            if(pixels & 0x40) {
-                draw_line(x, line,   x+3, line,   color);
-                draw_line(x, line+1, x+3, line+1, color);
-            } x += 4;
-            if(pixels & 0x20) {
-                draw_line(x, line,   x+3, line,   color);
-                draw_line(x, line+1, x+3, line+1, color);
-            } x += 4;
-            if(pixels & 0x10) {
-                draw_line(x, line,   x+3, line,   color);
-                draw_line(x, line+1, x+3, line+1, color);
-            } x += 4;
-            if(pixels & 0x08) {
-                draw_line(x, line,   x+3, line,   color);
-                draw_line(x, line+1, x+3, line+1, color);
-            } x += 4;
-            if(pixels & 0x04) {
-                draw_line(x, line,   x+3, line,   color);
-                draw_line(x, line+1, x+3, line+1, color);
-            } x += 4;
-            if(pixels & 0x02) {
-                draw_line(x, line,   x+3, line,   color);
-                draw_line(x, line+1, x+3, line+1, color);
-            } x += 4;
-            if(pixels & 0x01) {
-                draw_line(x, line,   x+3, line,   color);
-                draw_line(x, line+1, x+3, line+1, color);
-            } x += 4;
+            if(multi_color) {
+                x += 32;
+                unsigned x2 = x - 1;
+                unsigned x1 = x2 - 7;
+                color = pixels & 3;
+                draw_line(x1, line,   x2, line,   multi_color_palette[color]);
+                draw_line(x1, line+1, x2, line+1, multi_color_palette[color]);
+                x2 -= 8;
+                x1 -= 8;
+                pixels >>= 2;
+                color = pixels & 3;
+                draw_line(x1, line,   x2, line,   multi_color_palette[color]);
+                draw_line(x1, line+1, x2, line+1, multi_color_palette[color]);
+                x2 -= 8;
+                x1 -= 8;
+                pixels >>= 2;
+                color = pixels & 3;
+                draw_line(x1, line,   x2, line,   multi_color_palette[color]);
+                draw_line(x1, line+1, x2, line+1, multi_color_palette[color]);
+                x2 -= 8;
+                x1 -= 8;
+                pixels >>= 2;
+                color = pixels & 3;
+                draw_line(x1, line,   x2, line,   multi_color_palette[color]);
+                draw_line(x1, line+1, x2, line+1, multi_color_palette[color]);
+            } else {
+                unsigned x2 = x + 31;
+                color = multi_color_palette[2];
+
+                // background
+                draw_line(x, line,   x2, line,   screen_color);
+                draw_line(x, line+1, x2, line+1, screen_color);
+
+                x2 = x + 3;
+                if(pixels & 0x80) {
+                    draw_line(x, line,   x2, line,   color);
+                    draw_line(x, line+1, x2, line+1, color);
+                }
+                x  += 4;
+                x2 += 4;
+                if(pixels & 0x40) {
+                    draw_line(x, line,   x2, line,   color);
+                    draw_line(x, line+1, x2, line+1, color);
+                }
+                x  += 4;
+                x2 += 4;
+                if(pixels & 0x20) {
+                    draw_line(x, line,   x2, line,   color);
+                    draw_line(x, line+1, x2, line+1, color);
+                }
+                x  += 4;
+                x2 += 4;
+                if(pixels & 0x10) {
+                    draw_line(x, line,   x2, line,   color);
+                    draw_line(x, line+1, x2, line+1, color);
+                }
+                x  += 4;
+                x2 += 4;
+                if(pixels & 0x08) {
+                    draw_line(x, line,   x2, line,   color);
+                    draw_line(x, line+1, x2, line+1, color);
+                }
+                x  += 4;
+                x2 += 4;
+                if(pixels & 0x04) {
+                    draw_line(x, line,   x2, line,   color);
+                    draw_line(x, line+1, x2, line+1, color);
+                }
+                x  += 4;
+                x2 += 4;
+                if(pixels & 0x02) {
+                    draw_line(x, line,   x2, line,   color);
+                    draw_line(x, line+1, x2, line+1, color);
+                }
+                x  += 4;
+                x2 += 4;
+                if(pixels & 0x01) {
+                    draw_line(x, line,   x2, line,   color);
+                    draw_line(x, line+1, x2, line+1, color);
+                }
+                x  += 4;
+            }
         }
 
         // right border
