@@ -109,7 +109,7 @@ int main(int argc, char* argv[]){
     byte color = 0;
     for(int r = 0; r < 23; ++r) {
         for(int c = 0; c < 22; ++c) {
-            *color_memory++ = 10;//color;
+            *color_memory++ = color;
         }
         color = (color + 1) & 0x07;
         if(color == 1)

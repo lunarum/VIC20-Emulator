@@ -17,24 +17,6 @@
 #define CLR_LIGHT_GREEN     0x94e088
 #define CLR_LIGHT_BLUE      0x8071cc
 #define CLR_LIGHT_YELLOW    0xfeffb3
-//const rgb565_t palette[16] = {
-//    RGB565(0, 0, 0), /* black */
-//    RGB565(255, 255, 255), /* white */
-//    RGB565(182, 31, 33), /* red */
-//    RGB565(77, 240, 255), /* cyan */
-//    RGB565(180, 63, 255), /* purple */
-//    RGB565(68, 226, 55), /* green */
-//    RGB565(26, 52, 255), /* blue */
-//    RGB565(220, 215, 27), /* yellow */
-//    RGB565(202, 84, 0), /* orange */
-//    RGB565(233, 176, 114), /* light orange */
-//    RGB565(231, 146, 147), /* light red */
-//    RGB565(154, 247, 253), /* light cyan */
-//    RGB565(224, 159, 255), /* light purple */
-//    RGB565(143, 228, 147), /* light green */
-//    RGB565(130, 144, 255), /* light blue */
-//    RGB565(229, 222, 133) /* light yellow */
-//};
 
 unsigned color_palette[] = {
     CLR_BLACK,
@@ -104,18 +86,18 @@ unsigned color_palette[] = {
  */
 void vic_plot_scan_line() {
     //read registers from memory
-    byte *memory = memory_get_ptr(0);
-    unsigned offset_x = memory[0x9000] & 0x7F;
-//    bool interlace_mode = (memory[0x9000] & 0x80) ? true : false;
-    unsigned offset_y = memory[0x9001];
-    word screen_address = (memory[0x9002] & 0x80) << 2;
-    word color_address = screen_address | 0x9400;
-    unsigned columns = memory[0x9002] & 0x7F;
-    bool wide_characters = (memory[0x9003] & 1) ? true : false;
-    unsigned rows = (memory[0x9003] & 0x7F) >> 1;
-    unsigned scan_line = (memory[0x9003] & 0x80) >> 7;
+    byte *memory            = memory_get_ptr(0);
+    unsigned offset_x       = memory[0x9000] & 0x7F;
+//    bool interlace_mode     = (memory[0x9000] & 0x80) ? true : false;
+    unsigned offset_y       = memory[0x9001];
+    word screen_address     = (memory[0x9002] & 0x80) << 2;
+    word color_address      = screen_address | 0x9400;
+    unsigned columns        = memory[0x9002] & 0x7F;
+    bool wide_characters    = (memory[0x9003] & 1) ? true : false;
+    unsigned rows           = (memory[0x9003] & 0x7F) >> 1;
+    unsigned scan_line      = (memory[0x9003] & 0x80) >> 7;
     scan_line = (scan_line | memory[0x9004] << 1);
-    word character_address = (memory[0x9005] & 0x07) << 10;
+    word character_address  = (memory[0x9005] & 0x07) << 10;
     if(!(memory[0x9005] & 0x08))
         character_address |= 0x8000;
     screen_address |= (memory[0x9005] & 0x70) << 6;
@@ -124,7 +106,7 @@ void vic_plot_scan_line() {
     unsigned auxilary_color = color_palette[memory[0x900E] >> 4];
     unsigned screen_color   = color_palette[memory[0x900F] >> 4];
     unsigned border_color   = color_palette[memory[0x900F] & 0b111];
-//    bool inverted_mode = (memory[0x900F] & 0b1000) ? true : false;
+    bool inverted_mode      = (memory[0x900F] & 0b1000) ? true : false;
 
     unsigned min_y = offset_y << 1;
     unsigned min_x = offset_x << 1;
@@ -132,8 +114,6 @@ void vic_plot_scan_line() {
     unsigned max_x = min_x + (columns<<5);
     unsigned line = scan_line << 1;
     
-    unsigned multi_color_palette[4] = { screen_color, border_color, CLR_BLACK, auxilary_color };
-
     if(!scan_line)
         printf("chars=$%04X screen=$%04X color=$%04X ox=%03u oy=%03u rc=%02ux%02u mmx=%03u-%03u mmy=%03u-%03u bc=%02u sc=%02u ac=%02u\n",
             (unsigned)character_address,
@@ -167,18 +147,18 @@ void vic_plot_scan_line() {
         printf("%02u [", row);
         unsigned line_index = wide_characters ? ((scan_line - offset_y) & 0x0F) : ((scan_line - offset_y) & 0x07);
         for(unsigned column = 0; column < columns; ++column) {            
-            unsigned char_index = row*columns + column;
-            byte     color       = memory[color_address + char_index];
-            multi_color_palette[2] = color_palette[color & 0x07];
+            unsigned char_index  = row*columns + column;
+            unsigned color       = memory[color_address + char_index];
             bool     multi_color = (color & 0x08);
-            color &= 0x07;  // strip multi-color bit from color index
             unsigned character   = memory[screen_address + char_index];
             unsigned pixel_index = line_index + (wide_characters ? (character << 4) : (character << 3));
             unsigned pixels      = memory[character_address + pixel_index];
 
-            printf("%02X%c%u-%02X|", (unsigned)character, multi_color ? 'M' : 'H', (unsigned)color, pixels);
+            printf("%02X%c%u-%02X|", (unsigned)character, multi_color ? 'M' : 'H', color, pixels);
+            color = color_palette[color & 0x07];
 
             if(multi_color) {
+                unsigned multi_color_palette[] = { screen_color, border_color, color, auxilary_color };
                 x += 32;
                 unsigned x2 = x - 1;
                 unsigned x1 = x2 - 7;
@@ -204,12 +184,16 @@ void vic_plot_scan_line() {
                 draw_line(x1, line,   x2, line,   multi_color_palette[color]);
                 draw_line(x1, line+1, x2, line+1, multi_color_palette[color]);
             } else {
+                unsigned back_color = screen_color;
+                if(inverted_mode) {
+                    back_color = color;
+                    color = screen_color;
+                }
                 unsigned x2 = x + 31;
-                color = multi_color_palette[2];
 
                 // background
-                draw_line(x, line,   x2, line,   screen_color);
-                draw_line(x, line+1, x2, line+1, screen_color);
+                draw_line(x, line,   x2, line,   back_color);
+                draw_line(x, line+1, x2, line+1, back_color);
 
                 x2 = x + 3;
                 if(pixels & 0x80) {
