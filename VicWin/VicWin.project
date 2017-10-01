@@ -109,4 +109,7 @@
       </Completion>
     </Configuration>
   </Settings>
+  <VirtualDirectory Name="Libraries">
+    <File Name="Libraries/SDL.7z"/>
+  </VirtualDirectory>
 </CodeLite_Project>
