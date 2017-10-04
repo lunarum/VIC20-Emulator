@@ -5,14 +5,14 @@ bool single_step = false;
 
 
 cpu_result cpu_run() {
-    bool tmp_PS_C, s1, s2;
+    bool tmp_PS_C;
     byte opcode, value;
-    word value_w;
+    word value_w, value_w2;
 
     for(;;) {
         opcode = memory_getImmediate();
         switch(opcode) {
-         case 0x00: /* BRK  */
+        case 0x00: /* BRK  */
             cpu.cycles = 7;
             memory_stackPushAddress(cpu.PC+1);
             cpu_statusPush();
@@ -448,17 +448,28 @@ cpu_result cpu_run() {
             cpu.cycles = 6;
             value = memory_getIndexedIndirectX();
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
-                cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
+                value_w = (cpu.A & 0x0F) + (value & 0x0F) + (cpu.PS_C ? 1 : 0);
+                if(value_w >= 0x0A)
+                    value_w = ((value_w + 0x06) & 0x0F) + 0x10;
+                value_w += (cpu.A & 0xF0) + (value & 0xF0);
+
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
                 cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
+
+                if(value_w >= 0xA0)
+                    value_w += 0x60;
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_C = (value_w >= 0x100);
+            } else {
+                value_w = cpu.A + value + (cpu.PS_C ? 1 : 0);
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_Z = (cpu.A == 0);
+                cpu.PS_C = (value_w >= 0x100);
             }
+
             break;
         /* Illegal opcode 0x62: KIL  */
         /* Illegal opcode 0x63: RRA (aa,X) */
@@ -467,17 +478,28 @@ cpu_result cpu_run() {
             cpu.cycles = 3;
             value = memory_getZeroPage();
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
-                cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
+                value_w = (cpu.A & 0x0F) + (value & 0x0F) + (cpu.PS_C ? 1 : 0);
+                if(value_w >= 0x0A)
+                    value_w = ((value_w + 0x06) & 0x0F) + 0x10;
+                value_w += (cpu.A & 0xF0) + (value & 0xF0);
+
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
                 cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
+
+                if(value_w >= 0xA0)
+                    value_w += 0x60;
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_C = (value_w >= 0x100);
+            } else {
+                value_w = cpu.A + value + (cpu.PS_C ? 1 : 0);
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_Z = (cpu.A == 0);
+                cpu.PS_C = (value_w >= 0x100);
             }
+
             break;
         case 0x66: /* ROR aa */
             cpu.cycles = 5;
@@ -500,17 +522,28 @@ cpu_result cpu_run() {
             cpu.cycles = 2;
             value = memory_getImmediate();
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
-                cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
+                value_w = (cpu.A & 0x0F) + (value & 0x0F) + (cpu.PS_C ? 1 : 0);
+                if(value_w >= 0x0A)
+                    value_w = ((value_w + 0x06) & 0x0F) + 0x10;
+                value_w += (cpu.A & 0xF0) + (value & 0xF0);
+
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
                 cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
+
+                if(value_w >= 0xA0)
+                    value_w += 0x60;
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_C = (value_w >= 0x100);
+            } else {
+                value_w = cpu.A + value + (cpu.PS_C ? 1 : 0);
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_Z = (cpu.A == 0);
+                cpu.PS_C = (value_w >= 0x100);
             }
+
             break;
         case 0x6A: /* ROR  */
             cpu.cycles = 2;
@@ -529,17 +562,28 @@ cpu_result cpu_run() {
             cpu.cycles = 4;
             value = memory_getAbsolute();
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
-                cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
+                value_w = (cpu.A & 0x0F) + (value & 0x0F) + (cpu.PS_C ? 1 : 0);
+                if(value_w >= 0x0A)
+                    value_w = ((value_w + 0x06) & 0x0F) + 0x10;
+                value_w += (cpu.A & 0xF0) + (value & 0xF0);
+
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
                 cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
+
+                if(value_w >= 0xA0)
+                    value_w += 0x60;
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_C = (value_w >= 0x100);
+            } else {
+                value_w = cpu.A + value + (cpu.PS_C ? 1 : 0);
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_Z = (cpu.A == 0);
+                cpu.PS_C = (value_w >= 0x100);
             }
+
             break;
         case 0x6E: /* ROR aaaa */
             cpu.cycles = 6;
@@ -564,17 +608,28 @@ cpu_result cpu_run() {
             cpu.cycles = 5;
             value = memory_getIndirectIndexedY();
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
-                cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
+                value_w = (cpu.A & 0x0F) + (value & 0x0F) + (cpu.PS_C ? 1 : 0);
+                if(value_w >= 0x0A)
+                    value_w = ((value_w + 0x06) & 0x0F) + 0x10;
+                value_w += (cpu.A & 0xF0) + (value & 0xF0);
+
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
                 cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
+
+                if(value_w >= 0xA0)
+                    value_w += 0x60;
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_C = (value_w >= 0x100);
+            } else {
+                value_w = cpu.A + value + (cpu.PS_C ? 1 : 0);
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_Z = (cpu.A == 0);
+                cpu.PS_C = (value_w >= 0x100);
             }
+
             break;
         /* Illegal opcode 0x72: KIL  */
         /* Illegal opcode 0x73: RRA (aa),Y */
@@ -583,17 +638,28 @@ cpu_result cpu_run() {
             cpu.cycles = 4;
             value = memory_getZeroPageIndexedX();
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
-                cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
+                value_w = (cpu.A & 0x0F) + (value & 0x0F) + (cpu.PS_C ? 1 : 0);
+                if(value_w >= 0x0A)
+                    value_w = ((value_w + 0x06) & 0x0F) + 0x10;
+                value_w += (cpu.A & 0xF0) + (value & 0xF0);
+
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
                 cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
+
+                if(value_w >= 0xA0)
+                    value_w += 0x60;
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_C = (value_w >= 0x100);
+            } else {
+                value_w = cpu.A + value + (cpu.PS_C ? 1 : 0);
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_Z = (cpu.A == 0);
+                cpu.PS_C = (value_w >= 0x100);
             }
+
             break;
         case 0x76: /* ROR aa,X */
             cpu.cycles = 6;
@@ -614,17 +680,28 @@ cpu_result cpu_run() {
             cpu.cycles = 4;
             value = memory_getAbsoluteIndexedY();
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
-                cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
+                value_w = (cpu.A & 0x0F) + (value & 0x0F) + (cpu.PS_C ? 1 : 0);
+                if(value_w >= 0x0A)
+                    value_w = ((value_w + 0x06) & 0x0F) + 0x10;
+                value_w += (cpu.A & 0xF0) + (value & 0xF0);
+
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
                 cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
+
+                if(value_w >= 0xA0)
+                    value_w += 0x60;
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_C = (value_w >= 0x100);
+            } else {
+                value_w = cpu.A + value + (cpu.PS_C ? 1 : 0);
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_Z = (cpu.A == 0);
+                cpu.PS_C = (value_w >= 0x100);
             }
+
             break;
         /* Illegal opcode 0x7A: NOP  */
         /* Illegal opcode 0x7B: RRA aaaa,Y */
@@ -633,17 +710,28 @@ cpu_result cpu_run() {
             cpu.cycles = 4;
             value = memory_getAbsoluteIndexedX();
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
-                cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
+                value_w = (cpu.A & 0x0F) + (value & 0x0F) + (cpu.PS_C ? 1 : 0);
+                if(value_w >= 0x0A)
+                    value_w = ((value_w + 0x06) & 0x0F) + 0x10;
+                value_w += (cpu.A & 0xF0) + (value & 0xF0);
+
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
                 cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
+
+                if(value_w >= 0xA0)
+                    value_w += 0x60;
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_C = (value_w >= 0x100);
+            } else {
+                value_w = cpu.A + value + (cpu.PS_C ? 1 : 0);
+                cpu.PS_N = ((value_w & 0x80) != 0);
+                cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+                cpu.A = (byte)(value_w & 0xFF);
+                cpu.PS_Z = (cpu.A == 0);
+                cpu.PS_C = (value_w >= 0x100);
             }
+
             break;
         case 0x7E: /* ROR aaaa,X */
             cpu.cycles = 7;
@@ -1067,20 +1155,23 @@ cpu_result cpu_run() {
         case 0xE1: /* SBC (aa,X) */
             cpu.cycles = 6;
             value = memory_getIndexedIndirectX();
-            /* SBC is ADC with inverted value */
-            value = ~value;
+            value_w = cpu.A - value - (cpu.PS_C ? 0 : 1);
+            cpu.PS_N = ((value_w & 0x80) != 0);
+             cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+            cpu.PS_Z = (value_w == 0);
+            cpu.PS_C = (value_w < 0x100);
+
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
+                value_w2 = (cpu.A & 0x0F) - (value & 0x0F) + (cpu.PS_C ? 0 : 1);
+                if(value_w2 & 0x8000)
+                    value_w = ((value_w - 0x06) & 0x0F) - 0x10;
+                value_w2 += (cpu.A & 0xF0) - (value & 0xF0);
+                if(value_w2 & 0x8000)
+                    value_w -= 0x60;
+                cpu.A = (byte)(value_w2 & 0xFF);
+            } else
                 cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
-                cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
-            }
+
             break;
         /* Illegal opcode 0xE2: NOP #aa */
         /* Illegal opcode 0xE3: ISC (aa,X) */
@@ -1095,20 +1186,23 @@ cpu_result cpu_run() {
         case 0xE5: /* SBC aa */
             cpu.cycles = 3;
             value = memory_getZeroPage();
-            /* SBC is ADC with inverted value */
-            value = ~value;
+            value_w = cpu.A - value - (cpu.PS_C ? 0 : 1);
+            cpu.PS_N = ((value_w & 0x80) != 0);
+             cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+            cpu.PS_Z = (value_w == 0);
+            cpu.PS_C = (value_w < 0x100);
+
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
+                value_w2 = (cpu.A & 0x0F) - (value & 0x0F) + (cpu.PS_C ? 0 : 1);
+                if(value_w2 & 0x8000)
+                    value_w = ((value_w - 0x06) & 0x0F) - 0x10;
+                value_w2 += (cpu.A & 0xF0) - (value & 0xF0);
+                if(value_w2 & 0x8000)
+                    value_w -= 0x60;
+                cpu.A = (byte)(value_w2 & 0xFF);
+            } else
                 cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
-                cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
-            }
+
             break;
         case 0xE6: /* INC aa */
             cpu.cycles = 5;
@@ -1128,20 +1222,23 @@ cpu_result cpu_run() {
         case 0xE9: /* SBC #aa */
             cpu.cycles = 2;
             value = memory_getImmediate();
-            /* SBC is ADC with inverted value */
-            value = ~value;
+            value_w = cpu.A - value - (cpu.PS_C ? 0 : 1);
+            cpu.PS_N = ((value_w & 0x80) != 0);
+             cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+            cpu.PS_Z = (value_w == 0);
+            cpu.PS_C = (value_w < 0x100);
+
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
+                value_w2 = (cpu.A & 0x0F) - (value & 0x0F) + (cpu.PS_C ? 0 : 1);
+                if(value_w2 & 0x8000)
+                    value_w = ((value_w - 0x06) & 0x0F) - 0x10;
+                value_w2 += (cpu.A & 0xF0) - (value & 0xF0);
+                if(value_w2 & 0x8000)
+                    value_w -= 0x60;
+                cpu.A = (byte)(value_w2 & 0xFF);
+            } else
                 cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
-                cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
-            }
+
             break;
         case 0xEA: /* NOP  */
             cpu.cycles = 2;
@@ -1159,20 +1256,23 @@ cpu_result cpu_run() {
         case 0xED: /* SBC aaaa */
             cpu.cycles = 4;
             value = memory_getAbsolute();
-            /* SBC is ADC with inverted value */
-            value = ~value;
+            value_w = cpu.A - value - (cpu.PS_C ? 0 : 1);
+            cpu.PS_N = ((value_w & 0x80) != 0);
+             cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+            cpu.PS_Z = (value_w == 0);
+            cpu.PS_C = (value_w < 0x100);
+
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
+                value_w2 = (cpu.A & 0x0F) - (value & 0x0F) + (cpu.PS_C ? 0 : 1);
+                if(value_w2 & 0x8000)
+                    value_w = ((value_w - 0x06) & 0x0F) - 0x10;
+                value_w2 += (cpu.A & 0xF0) - (value & 0xF0);
+                if(value_w2 & 0x8000)
+                    value_w -= 0x60;
+                cpu.A = (byte)(value_w2 & 0xFF);
+            } else
                 cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
-                cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
-            }
+
             break;
         case 0xEE: /* INC aaaa */
             cpu.cycles = 6;
@@ -1194,20 +1294,23 @@ cpu_result cpu_run() {
         case 0xF1: /* SBC (aa),Y */
             cpu.cycles = 5;
             value = memory_getIndirectIndexedY();
-            /* SBC is ADC with inverted value */
-            value = ~value;
+            value_w = cpu.A - value - (cpu.PS_C ? 0 : 1);
+            cpu.PS_N = ((value_w & 0x80) != 0);
+             cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+            cpu.PS_Z = (value_w == 0);
+            cpu.PS_C = (value_w < 0x100);
+
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
+                value_w2 = (cpu.A & 0x0F) - (value & 0x0F) + (cpu.PS_C ? 0 : 1);
+                if(value_w2 & 0x8000)
+                    value_w = ((value_w - 0x06) & 0x0F) - 0x10;
+                value_w2 += (cpu.A & 0xF0) - (value & 0xF0);
+                if(value_w2 & 0x8000)
+                    value_w -= 0x60;
+                cpu.A = (byte)(value_w2 & 0xFF);
+            } else
                 cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
-                cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
-            }
+
             break;
         /* Illegal opcode 0xF2: KIL  */
         /* Illegal opcode 0xF3: ISC (aa),Y */
@@ -1215,20 +1318,23 @@ cpu_result cpu_run() {
         case 0xF5: /* SBC aa,X */
             cpu.cycles = 4;
             value = memory_getZeroPageIndexedX();
-            /* SBC is ADC with inverted value */
-            value = ~value;
+            value_w = cpu.A - value - (cpu.PS_C ? 0 : 1);
+            cpu.PS_N = ((value_w & 0x80) != 0);
+             cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+            cpu.PS_Z = (value_w == 0);
+            cpu.PS_C = (value_w < 0x100);
+
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
+                value_w2 = (cpu.A & 0x0F) - (value & 0x0F) + (cpu.PS_C ? 0 : 1);
+                if(value_w2 & 0x8000)
+                    value_w = ((value_w - 0x06) & 0x0F) - 0x10;
+                value_w2 += (cpu.A & 0xF0) - (value & 0xF0);
+                if(value_w2 & 0x8000)
+                    value_w -= 0x60;
+                cpu.A = (byte)(value_w2 & 0xFF);
+            } else
                 cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
-                cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
-            }
+
             break;
         case 0xF6: /* INC aa,X */
             cpu.cycles = 6;
@@ -1246,20 +1352,23 @@ cpu_result cpu_run() {
         case 0xF9: /* SBC aaaa,Y */
             cpu.cycles = 4;
             value = memory_getAbsoluteIndexedY();
-            /* SBC is ADC with inverted value */
-            value = ~value;
+            value_w = cpu.A - value - (cpu.PS_C ? 0 : 1);
+            cpu.PS_N = ((value_w & 0x80) != 0);
+             cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+            cpu.PS_Z = (value_w == 0);
+            cpu.PS_C = (value_w < 0x100);
+
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
+                value_w2 = (cpu.A & 0x0F) - (value & 0x0F) + (cpu.PS_C ? 0 : 1);
+                if(value_w2 & 0x8000)
+                    value_w = ((value_w - 0x06) & 0x0F) - 0x10;
+                value_w2 += (cpu.A & 0xF0) - (value & 0xF0);
+                if(value_w2 & 0x8000)
+                    value_w -= 0x60;
+                cpu.A = (byte)(value_w2 & 0xFF);
+            } else
                 cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
-                cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
-            }
+
             break;
         /* Illegal opcode 0xFA: NOP  */
         /* Illegal opcode 0xFB: ISC aaaa,Y */
@@ -1267,20 +1376,23 @@ cpu_result cpu_run() {
         case 0xFD: /* SBC aaaa,X */
             cpu.cycles = 4;
             value = memory_getAbsoluteIndexedX();
-            /* SBC is ADC with inverted value */
-            value = ~value;
+            value_w = cpu.A - value - (cpu.PS_C ? 0 : 1);
+            cpu.PS_N = ((value_w & 0x80) != 0);
+             cpu.PS_V = ((cpu.A ^ value_w) & 0x80) && !((cpu.A ^ value) & 0x80);
+            cpu.PS_Z = (value_w == 0);
+            cpu.PS_C = (value_w < 0x100);
+
             if(cpu.PS_D) {
-                return RESULT_ILLEGAL_INSTUCTION;
-            } else {
-                s1 = ((cpu.A & 0x80) != 0);
-                s2 = ((value & 0x80) != 0);
-                value_w = (word)cpu.A + (word)value + (word)cpu.PS_C;
+                value_w2 = (cpu.A & 0x0F) - (value & 0x0F) + (cpu.PS_C ? 0 : 1);
+                if(value_w2 & 0x8000)
+                    value_w = ((value_w - 0x06) & 0x0F) - 0x10;
+                value_w2 += (cpu.A & 0xF0) - (value & 0xF0);
+                if(value_w2 & 0x8000)
+                    value_w -= 0x60;
+                cpu.A = (byte)(value_w2 & 0xFF);
+            } else
                 cpu.A = (byte)(value_w & 0xFF);
-                cpu.PS_C = ((cpu.A & 0xFF00) != 0);
-                cpu.PS_Z = (value_w == 0);
-                cpu.PS_N = ((cpu.A & 0x80) != 0);
-                cpu.PS_V = (s1 && s2 && !cpu.PS_N) || (!s1 && !s2 && cpu.PS_N);
-            }
+
             break;
         case 0xFE: /* INC aaaa,X */
             cpu.cycles = 7;
@@ -1291,6 +1403,7 @@ cpu_result cpu_run() {
             memory_setLast(value);
             break;
         /* Illegal opcode 0xFF: ISC aaaa,X */
+
         default: /* just in case :) */
             cpu.cycles = 1;
             return RESULT_ILLEGAL_INSTUCTION;

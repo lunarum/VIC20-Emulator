@@ -4,6 +4,7 @@
   <Project Name="Test" Path="Test/Test.project" Active="No"/>
   <Project Name="VicWin" Path="VicWin/VicWin.project" Active="Yes"/>
   <Project Name="ROM2Source" Path="ROM2Source/ROM2Source.project" Active="No"/>
+  <Project Name="DecimalMode" Path="DecimalMode/DecimalMode.project" Active="No"/>
   <BuildMatrix>
     <WorkspaceConfiguration Name="Debug" Selected="yes">
       <Environment/>
@@ -11,6 +12,7 @@
       <Project Name="Test" ConfigName="Debug"/>
       <Project Name="VicWin" ConfigName="Debug"/>
       <Project Name="ROM2Source" ConfigName="Debug"/>
+      <Project Name="DecimalMode" ConfigName="Debug"/>
     </WorkspaceConfiguration>
     <WorkspaceConfiguration Name="Release" Selected="yes">
       <Environment/>
@@ -18,6 +20,7 @@
       <Project Name="Test" ConfigName="Release"/>
       <Project Name="VicWin" ConfigName="Release"/>
       <Project Name="ROM2Source" ConfigName="Release"/>
+      <Project Name="DecimalMode" ConfigName="Release"/>
     </WorkspaceConfiguration>
   </BuildMatrix>
 </CodeLite_Workspace>

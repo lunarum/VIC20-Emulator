@@ -151,3 +151,68 @@ int main(int argc, char* argv[]){
 	
 	return 0;
 }
+//
+// VICE ADC/ SBC implementations
+//
+//#define ADC(get_func, pc_inc)                                                                      \
+//    do {                                                                                           \
+//        unsigned int tmp_value;                                                                    \
+//        unsigned int tmp;                                                                          \
+//                                                                                                   \
+//        get_func(tmp_value);                                                                       \
+//                                                                                                   \
+//        if (LOCAL_DECIMAL()) {                                                                     \
+//            tmp = (reg_a_read & 0xf) + (tmp_value & 0xf) + (reg_p & 0x1);                          \
+//            if (tmp > 0x9) {                                                                       \
+//                tmp += 0x6;                                                                        \
+//            }                                                                                      \
+//            if (tmp <= 0x0f) {                                                                     \
+//                tmp = (tmp & 0xf) + (reg_a_read & 0xf0) + (tmp_value & 0xf0);                      \
+//            } else {                                                                               \
+//                tmp = (tmp & 0xf) + (reg_a_read & 0xf0) + (tmp_value & 0xf0) + 0x10;               \
+//            }                                                                                      \
+//            LOCAL_SET_ZERO(!((reg_a_read + tmp_value + (reg_p & 0x1)) & 0xff));                    \
+//            LOCAL_SET_SIGN(tmp & 0x80);                                                            \
+//            LOCAL_SET_OVERFLOW(((reg_a_read ^ tmp) & 0x80) && !((reg_a_read ^ tmp_value) & 0x80)); \
+//            if ((tmp & 0x1f0) > 0x90) {                                                            \
+//                tmp += 0x60;                                                                       \
+//            }                                                                                      \
+//            LOCAL_SET_CARRY((tmp & 0xff0) > 0xf0);                                                 \
+//        } else {                                                                                   \
+//            tmp = tmp_value + reg_a_read + (reg_p & P_CARRY);                                      \
+//            LOCAL_SET_NZ(tmp & 0xff);                                                              \
+//            LOCAL_SET_OVERFLOW(!((reg_a_read ^ tmp_value) & 0x80) && ((reg_a_read ^ tmp) & 0x80)); \
+//            LOCAL_SET_CARRY(tmp > 0xff);                                                           \
+//        }                                                                                          \
+//        reg_a_write = tmp;                                                                         \
+//        INC_PC(pc_inc);                                                                            \
+//    } while (0)
+//#define SBC(get_func, pc_inc)                                                               \
+//    do {                                                                                    \
+//        WORD src, tmp;                                                                      \
+//                                                                                            \
+//        get_func(src)                                                                       \
+//        tmp = reg_a_read - src - ((reg_p & P_CARRY) ? 0 : 1);                               \
+//        if (reg_p & P_DECIMAL) {                                                            \
+//            unsigned int tmp_a;                                                             \
+//            tmp_a = (reg_a_read & 0xf) - (src & 0xf) - ((reg_p & P_CARRY) ? 0 : 1);         \
+//            if (tmp_a & 0x10) {                                                             \
+//                tmp_a = ((tmp_a - 6) & 0xf) | ((reg_a_read & 0xf0) - (src & 0xf0) - 0x10);  \
+//            } else {                                                                        \
+//                tmp_a = (tmp_a & 0xf) | ((reg_a_read & 0xf0) - (src & 0xf0));               \
+//            }                                                                               \
+//            if (tmp_a & 0x100) {                                                            \
+//                tmp_a -= 0x60;                                                              \
+//            }                                                                               \
+//            LOCAL_SET_CARRY(tmp < 0x100);                                                   \
+//            LOCAL_SET_NZ(tmp & 0xff);                                                       \
+//            LOCAL_SET_OVERFLOW(((reg_a_read ^ tmp) & 0x80) && ((reg_a_read ^ src) & 0x80)); \
+//            reg_a_write = (BYTE) tmp_a;                                                     \
+//        } else {                                                                            \
+//            LOCAL_SET_NZ(tmp & 0xff);                                                       \
+//            LOCAL_SET_CARRY(tmp < 0x100);                                                   \
+//            LOCAL_SET_OVERFLOW(((reg_a_read ^ tmp) & 0x80) && ((reg_a_read ^ src) & 0x80)); \
+//            reg_a_write = (BYTE) tmp;                                                       \
+//        }                                                                                   \
+//        INC_PC(pc_inc);                                                                     \
+//    } while (0)
