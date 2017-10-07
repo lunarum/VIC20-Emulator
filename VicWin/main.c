@@ -100,47 +100,43 @@ int main(int argc, char* argv[]){
 
     // Default 5K VIC-20
     vic20_config(0);
-    // Fill with characters
-    byte *screen_memory = memory_get_ptr(0x1E00);
-    for(int i = 0; i < 256; ++i)
-        *screen_memory++ = (byte)i;
-    // Fill with colors
-    byte *color_memory = memory_get_ptr(0x9600);
-    byte color = 0;
-    for(int r = 0; r < 23; ++r) {
-        for(int c = 0; c < 22; ++c) {
-            *color_memory++ = color;
-        }
-        color = (color + 1) & 0x07;
-        if(color == 1)
-            ++color; // Skip white as it's the default background color
-    }
 
-    // draw screen
-    for(int scan = 0; scan < FRAME_LINES; ++scan) {
-        vic_plot_scan_line();
-    }
-
-
-    //Take a quick break after all that hard work
+//    // Fill with characters
+//    byte *screen_memory = memory_get_ptr(0x1E00);
+//    for(int i = 0; i < 256; ++i)
+//        *screen_memory++ = (byte)i;
+//    // Fill with colors
+//    byte *color_memory = memory_get_ptr(0x9600);
+//    byte color = 0;
+//    for(int r = 0; r < 23; ++r) {
+//        for(int c = 0; c < 22; ++c) {
+//            *color_memory++ = color;
+//        }
+//        color = (color + 1) & 0x07;
+//        if(color == 1)
+//            ++color; // Skip white as it's the default background color
+//    }
+//
+//    // draw screen
+//    for(int scan = 0; scan < FRAME_LINES; ++scan) {
+//        vic_plot_scan_line();
+//    }
+//
+//
+//    //Take a quick break after all that hard work
 //    SDL_Delay(5000);
 
-    int keypress = 0;
-    while(!keypress) 
-    {
-        SDL_Event event;
-         while(SDL_PollEvent(&event)) 
-         {      
-              switch (event.type) 
-              {
-                  case SDL_QUIT:
-	              keypress = -1;
-	              break;
-                  case SDL_KEYDOWN:
-                       keypress = -1;
-                       break;
-              }
-         }
+    cpu_result result;
+    SDL_Event event;
+    for(;;) {
+        result = cpu_run();
+//        cpu_logStatus(result);
+        if(result == RESULT_CYCLE_RESET)
+            vic_plot_scan_line();
+        if(SDL_PollEvent(&event)) {      
+            if(event.type == SDL_QUIT || event.type == SDL_KEYDOWN)
+               break;
+        }
     }
 
 	//Clean up our objects and quit
@@ -151,68 +147,3 @@ int main(int argc, char* argv[]){
 	
 	return 0;
 }
-//
-// VICE ADC/ SBC implementations
-//
-//#define ADC(get_func, pc_inc)                                                                      \
-//    do {                                                                                           \
-//        unsigned int tmp_value;                                                                    \
-//        unsigned int tmp;                                                                          \
-//                                                                                                   \
-//        get_func(tmp_value);                                                                       \
-//                                                                                                   \
-//        if (LOCAL_DECIMAL()) {                                                                     \
-//            tmp = (reg_a_read & 0xf) + (tmp_value & 0xf) + (reg_p & 0x1);                          \
-//            if (tmp > 0x9) {                                                                       \
-//                tmp += 0x6;                                                                        \
-//            }                                                                                      \
-//            if (tmp <= 0x0f) {                                                                     \
-//                tmp = (tmp & 0xf) + (reg_a_read & 0xf0) + (tmp_value & 0xf0);                      \
-//            } else {                                                                               \
-//                tmp = (tmp & 0xf) + (reg_a_read & 0xf0) + (tmp_value & 0xf0) + 0x10;               \
-//            }                                                                                      \
-//            LOCAL_SET_ZERO(!((reg_a_read + tmp_value + (reg_p & 0x1)) & 0xff));                    \
-//            LOCAL_SET_SIGN(tmp & 0x80);                                                            \
-//            LOCAL_SET_OVERFLOW(((reg_a_read ^ tmp) & 0x80) && !((reg_a_read ^ tmp_value) & 0x80)); \
-//            if ((tmp & 0x1f0) > 0x90) {                                                            \
-//                tmp += 0x60;                                                                       \
-//            }                                                                                      \
-//            LOCAL_SET_CARRY((tmp & 0xff0) > 0xf0);                                                 \
-//        } else {                                                                                   \
-//            tmp = tmp_value + reg_a_read + (reg_p & P_CARRY);                                      \
-//            LOCAL_SET_NZ(tmp & 0xff);                                                              \
-//            LOCAL_SET_OVERFLOW(!((reg_a_read ^ tmp_value) & 0x80) && ((reg_a_read ^ tmp) & 0x80)); \
-//            LOCAL_SET_CARRY(tmp > 0xff);                                                           \
-//        }                                                                                          \
-//        reg_a_write = tmp;                                                                         \
-//        INC_PC(pc_inc);                                                                            \
-//    } while (0)
-//#define SBC(get_func, pc_inc)                                                               \
-//    do {                                                                                    \
-//        WORD src, tmp;                                                                      \
-//                                                                                            \
-//        get_func(src)                                                                       \
-//        tmp = reg_a_read - src - ((reg_p & P_CARRY) ? 0 : 1);                               \
-//        if (reg_p & P_DECIMAL) {                                                            \
-//            unsigned int tmp_a;                                                             \
-//            tmp_a = (reg_a_read & 0xf) - (src & 0xf) - ((reg_p & P_CARRY) ? 0 : 1);         \
-//            if (tmp_a & 0x10) {                                                             \
-//                tmp_a = ((tmp_a - 6) & 0xf) | ((reg_a_read & 0xf0) - (src & 0xf0) - 0x10);  \
-//            } else {                                                                        \
-//                tmp_a = (tmp_a & 0xf) | ((reg_a_read & 0xf0) - (src & 0xf0));               \
-//            }                                                                               \
-//            if (tmp_a & 0x100) {                                                            \
-//                tmp_a -= 0x60;                                                              \
-//            }                                                                               \
-//            LOCAL_SET_CARRY(tmp < 0x100);                                                   \
-//            LOCAL_SET_NZ(tmp & 0xff);                                                       \
-//            LOCAL_SET_OVERFLOW(((reg_a_read ^ tmp) & 0x80) && ((reg_a_read ^ src) & 0x80)); \
-//            reg_a_write = (BYTE) tmp_a;                                                     \
-//        } else {                                                                            \
-//            LOCAL_SET_NZ(tmp & 0xff);                                                       \
-//            LOCAL_SET_CARRY(tmp < 0x100);                                                   \
-//            LOCAL_SET_OVERFLOW(((reg_a_read ^ tmp) & 0x80) && ((reg_a_read ^ src) & 0x80)); \
-//            reg_a_write = (BYTE) tmp;                                                       \
-//        }                                                                                   \
-//        INC_PC(pc_inc);                                                                     \
-//    } while (0)

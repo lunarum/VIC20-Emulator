@@ -82,7 +82,7 @@ typedef enum { false = 0, true = !false } bool;
 
 #include "memory.h"
 
-typedef enum { RESULT_NMI, RESULT_RESET, RESULT_IRQ, RESULT_ILLEGAL_INSTUCTION} cpu_result;
+typedef enum {RESULT_STEP, RESULT_NMI, RESULT_RESET, RESULT_IRQ, RESULT_ILLEGAL_INSTUCTION, RESULT_CYCLE_RESET} cpu_result;
 
 extern struct registers {
     byte A,      /*< Accumulator */
@@ -102,7 +102,7 @@ extern void cpu_RESET();
 extern void cpu_statusPush(void);
 extern void cpu_statusPull(void);
 extern void cpu_disassemble(word address);
-extern void cpu_logStatus(void);
+extern void cpu_logStatus(cpu_result result);
 
 extern cpu_result cpu_run(void);
 
@@ -124,13 +124,13 @@ static inline void cpu_IRQ() {
     memory_stackPushAddress(cpu.PC+1);
     memory_stackPush(cpu_get_state());
     cpu.PS_B = false;
-    cpu.PC = MEM_IRQ_BREAK;
+    cpu.PC = memory_get_vector(MEM_IRQ_BREAK);
 }
 
 static inline void cpu_NMI() {
     memory_stackPushAddress(cpu.PC+1);
     memory_stackPush(cpu_get_state());
-    cpu.PC = MEM_NMI;
+    cpu.PC = memory_get_vector(MEM_NMI);
 }
 
 #endif

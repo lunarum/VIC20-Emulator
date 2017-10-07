@@ -74,6 +74,7 @@ int main_debugger(int argc, char **argv)
     char command[INPUT_BUFFER_LENGTH+1], *p;
     int chars;
     word address;
+    cpu_result result;
 
 	printf("hello 6502 emulator world\n\n");
     memory_setPageType(0x00, 0xDF, MEM_READ | MEM_WRITE); /* RAM */
@@ -101,7 +102,7 @@ int main_debugger(int argc, char **argv)
         p = command;
         switch(*p) {
             case 'c':
-                cpu_logStatus();
+                cpu_logStatus(RESULT_STEP);
                 break;
             case 'd':
                 ++p;
@@ -129,12 +130,11 @@ int main_debugger(int argc, char **argv)
             case 'I':
                 if(p[1] == 'R' && p[2] == 'Q') {
                     cpu_IRQ();
-                    cpu_logStatus();
+                    cpu_logStatus(RESULT_IRQ);
                 }
                 break;
             case 'l':
                 readBinary(0x0200, "..\\Test\\and_or_xor_test.bin");
-                cpu_logStatus();
                 break;
             case 'm':
                 ++p;
@@ -146,7 +146,7 @@ int main_debugger(int argc, char **argv)
             case 'N':
                 if(p[1] == 'M' && p[2] == 'I') {
                     cpu_NMI();
-                    cpu_logStatus();
+                    cpu_logStatus(RESULT_NMI);
                 }
                 break;
             case 'q':
@@ -155,7 +155,7 @@ int main_debugger(int argc, char **argv)
             case 'R':
                 if(p[1] == 'E' && p[2] == 'S') {
                     cpu_RESET();
-                    cpu_logStatus();
+                    cpu_logStatus(RESULT_RESET);
                 }
                 break;
             case 'r':
@@ -164,13 +164,13 @@ int main_debugger(int argc, char **argv)
                 if(address != 0)
                     cpu.PC = address;
                 single_step = false;
-                cpu_run();
-                cpu_logStatus();
+                result = cpu_run();
+                cpu_logStatus(result);
                 break;
             case 's':
                 single_step = true;
-                cpu_run();
-                cpu_logStatus();
+                result = cpu_run();
+                cpu_logStatus(result);
                 cpu_disassemble(cpu.PC);
                 break;
         }

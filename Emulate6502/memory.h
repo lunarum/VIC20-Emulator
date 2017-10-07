@@ -47,6 +47,7 @@ static inline byte getPage(word address) { return address >> 8; }
 static inline word getAddress(byte lowByte, byte highByte) { return ((word)highByte) << 8 | lowByte; }
 
 extern byte *memory_get_ptr(word startAddress);
+extern word memory_get_vector(word vectorAddress);
 
 extern void memory_setPageType(byte startPage, byte endPage, byte memoryType);
 extern byte memory_get(word address);

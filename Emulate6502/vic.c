@@ -1,5 +1,5 @@
 #include "vic.h"
-#include <stdio.h>
+//#include <stdio.h>
 
 #define CLR_BLACK   0x000000
 #define CLR_WHITE   0xffffff
@@ -106,7 +106,7 @@ void vic_plot_scan_line() {
     unsigned auxilary_color = color_palette[memory[0x900E] >> 4];
     unsigned screen_color   = color_palette[memory[0x900F] >> 4];
     unsigned border_color   = color_palette[memory[0x900F] & 0b111];
-    bool inverted_mode      = (memory[0x900F] & 0b1000) ? true : false;
+    bool inverted_mode      = (memory[0x900F] & 0b1000) ? false : true; // normal mode (1) or inverted mode (0)!!!
 
     unsigned min_y = offset_y << 1;
     unsigned min_x = offset_x << 1;
@@ -114,29 +114,29 @@ void vic_plot_scan_line() {
     unsigned max_x = min_x + (columns<<5);
     unsigned line = scan_line << 1;
     
-    if(!scan_line)
-        printf("chars=$%04X screen=$%04X color=$%04X ox=%03u oy=%03u rc=%02ux%02u mmx=%03u-%03u mmy=%03u-%03u bc=%02u sc=%02u ac=%02u\n",
-            (unsigned)character_address,
-            (unsigned)screen_address,
-            (unsigned)color_address,
-            offset_x, offset_y, rows, columns,
-            min_x, max_x, min_y, max_y,
-            (unsigned)(memory[0x900F] & 0b111), (unsigned)(memory[0x900F] >> 4), (unsigned)(memory[0x900E] >> 4));
-    
-    printf("plot(sl=%03u)", scan_line);
+//    if(!scan_line)
+//        printf("chars=$%04X screen=$%04X color=$%04X ox=%03u oy=%03u rc=%02ux%02u mmx=%03u-%03u mmy=%03u-%03u bc=%02u sc=%02u ac=%02u\n",
+//            (unsigned)character_address,
+//            (unsigned)screen_address,
+//            (unsigned)color_address,
+//            offset_x, offset_y, rows, columns,
+//            min_x, max_x, min_y, max_y,
+//            (unsigned)(memory[0x900F] & 0b111), (unsigned)(memory[0x900F] >> 4), (unsigned)(memory[0x900E] >> 4));
+//    printf("plot(sl=%03u)", scan_line);
 
     if(line < min_y || line >= max_y) {
         if(line < SCREEN_HEIGHT) {
-            printf("-B\n");
+//            printf("-B\n");
             // border
             draw_line(0, line, SCREEN_WIDTH, line, border_color);
             ++line;
             draw_line(0, line, SCREEN_WIDTH, line, border_color);
-        } else
-            printf("-O\n");
+        }
+//        else
+//            printf("-O\n");
     } else {
         // screen
-        printf("-S ");
+//        printf("-S ");
         
         // Left border
         draw_line(0, line, min_x, line, border_color);        
@@ -144,7 +144,7 @@ void vic_plot_scan_line() {
         
         unsigned x = min_x;
         unsigned row = wide_characters ? ((line - min_y) >> 5) : ((line - min_y) >> 4);
-        printf("%02u [", row);
+//        printf("%02u [", row);
         unsigned line_index = wide_characters ? ((scan_line - offset_y) & 0x0F) : ((scan_line - offset_y) & 0x07);
         for(unsigned column = 0; column < columns; ++column) {            
             unsigned char_index  = row*columns + column;
@@ -154,7 +154,7 @@ void vic_plot_scan_line() {
             unsigned pixel_index = line_index + (wide_characters ? (character << 4) : (character << 3));
             unsigned pixels      = memory[character_address + pixel_index];
 
-            printf("%02X%c%u-%02X|", (unsigned)character, multi_color ? 'M' : 'H', color, pixels);
+//            printf("%02X%c%u-%02X|", (unsigned)character, multi_color ? 'M' : 'H', color, pixels);
             color = color_palette[color & 0x07];
 
             if(multi_color) {
@@ -249,7 +249,7 @@ void vic_plot_scan_line() {
         // right border
         draw_line(max_x, line, SCREEN_WIDTH, line, border_color);        
         draw_line(max_x, line+1, SCREEN_WIDTH, line+1, border_color);
-        printf("]\n");
+//        printf("]\n");
     }
 
     if(++scan_line >= FRAME_LINES) {

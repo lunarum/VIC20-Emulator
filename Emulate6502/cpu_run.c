@@ -3,13 +3,16 @@
 
 bool single_step = false;
 
-
 cpu_result cpu_run() {
     bool tmp_PS_C;
     byte opcode, value;
     word value_w, value_w2;
 
     for(;;) {
+        if(cycle_counter < 0) {
+            cycle_counter += cycle_reset;
+            return RESULT_CYCLE_RESET;
+        }
         opcode = memory_getImmediate();
         switch(opcode) {
         case 0x00: /* BRK  */
@@ -17,7 +20,7 @@ cpu_result cpu_run() {
             memory_stackPushAddress(cpu.PC+1);
             cpu_statusPush();
             cpu.PS_B = true;
-            cpu.PC = MEM_IRQ_BREAK;
+            cpu.PC = memory_get_vector(MEM_IRQ_BREAK);
             break;
         case 0x01: /* ORA (aa,X) */
             cpu.cycles = 6;
@@ -1409,12 +1412,8 @@ cpu_result cpu_run() {
             return RESULT_ILLEGAL_INSTUCTION;
         }
         cycle_counter -= cpu.cycles;
-        if(cycle_counter < 0) {
-            /* TODO: interrupt logic */
-            cycle_counter += cycle_reset;
-        }
-        if(single_step || opcode == 0)
-            return RESULT_IRQ;
+        if(single_step)
+            return RESULT_STEP;
     }
     return RESULT_ILLEGAL_INSTUCTION;
 }

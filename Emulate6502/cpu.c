@@ -16,7 +16,7 @@ void cpu_setCycleReset(int value) {
 
 void cpu_RESET() {
     cpu.SP = MEM_PAGE_SIZE;
-    cpu.PC = MEM_RESET;
+    cpu.PC = memory_get_vector(MEM_RESET);
     cpu.cycles = 0;
     cycle_counter = cycle_reset;
 }
@@ -134,14 +134,15 @@ void cpu_disassemble(word address) {
     }
 }
 
-void cpu_logStatus(void) {
-    fprintf(stderr, "A:%02X X:%02X Y:%02X SP:%02X PC:%04X PS:%c%c-%c%c%c%c%c\n",
-        (unsigned int)cpu.A, (unsigned int)cpu.X, (unsigned int)cpu.Y, (unsigned int)cpu.SP, cpu.PC,
+void cpu_logStatus(cpu_result result) {
+    fprintf(stderr, "A:%02X X:%02X Y:%02X SP:%02X PC:%04X PS:%c%c-%c%c%c%c%c - %1X\n",
+        (unsigned)cpu.A, (unsigned)cpu.X, (unsigned)cpu.Y, (unsigned)cpu.SP, (unsigned)cpu.PC,
         cpu.PS_N ? 'N' : '-',
         cpu.PS_V ? 'V' : '-',
         cpu.PS_B ? 'B' : '-',
         cpu.PS_D ? 'D' : '-',
         cpu.PS_I ? 'I' : '-',
         cpu.PS_Z ? 'Z' : '-',
-        cpu.PS_C ? 'C' : '-');
+        cpu.PS_C ? 'C' : '-',
+        (unsigned)result);
 }

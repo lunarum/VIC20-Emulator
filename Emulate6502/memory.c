@@ -11,6 +11,10 @@ byte *memory_get_ptr(word startAddress) {
     return memory + startAddress;
 }
 
+word memory_get_vector(word vectorAddress) {
+    return getAddress(memory[vectorAddress], memory[vectorAddress+1]);
+}
+
 void memory_setPageType(byte startPage, byte endPage, byte memoryType) {
     for(int page = startPage; page <= endPage; ++page)
         pageType[page] = memoryType;
@@ -26,8 +30,9 @@ byte memory_get(word address) {
 
 void memory_set(word address, byte value) {
     byte page = getPage(address);
-    if(pageType[page] & MEM_WRITE)
+    if(pageType[page] & MEM_WRITE) {
         memory[address] = value;
+    }
 }
 
 void memory_setLast(byte value) {
