@@ -23,8 +23,15 @@ void memory_setPageType(byte startPage, byte endPage, byte memoryType) {
 byte memory_get(word address) {
     byte page = getPage(address);
     last_address = address;
-    if(pageType[page] & MEM_READ)
+    if(pageType[page] & MEM_READ) {
         return memory[last_address];
+    }
+    else if(pageType[page] & MEM_IO) {
+        if(pageType[page] & IO_VIC)
+            return vic_read_register(address);
+        else if(pageType[page] & IO_VIA)
+            return via_read_register(address);
+    }
     return 0xAA; /* dummy value */
 }
 
@@ -33,12 +40,25 @@ void memory_set(word address, byte value) {
     if(pageType[page] & MEM_WRITE) {
         memory[address] = value;
     }
+    else if(pageType[page] & MEM_IO) {
+        if(pageType[page] & IO_VIC)
+            vic_write_register(address, value);
+        else if(pageType[page] & IO_VIA)
+            via_write_register(address, value);
+    }
 }
 
 void memory_setLast(byte value) {
     byte page = getPage(last_address);
-    if(pageType[page] & MEM_WRITE)
+    if(pageType[page] & MEM_WRITE) {
         memory[last_address] = value;
+    }
+    else if(pageType[page] & MEM_IO) {
+        if(pageType[page] & IO_VIC)
+            vic_write_register(last_address, value);
+        else if(pageType[page] & IO_VIA)
+            via_write_register(last_address, value);
+    }
 }
 
 byte memory_getZero(byte addressZ) {

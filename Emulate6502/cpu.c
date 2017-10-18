@@ -14,7 +14,7 @@ void cpu_setCycleReset(int value) {
         cycle_reset = value;
 }
 
-void cpu_RESET() {
+void cpu_reset() {
     cpu.SP = MEM_PAGE_SIZE;
     cpu.PC = memory_get_vector(MEM_RESET);
     cpu.cycles = 0;

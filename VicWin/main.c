@@ -75,7 +75,7 @@ int main(int argc, char* argv[]){
 	}
 	
 	//Now create a window with title "Hello World" at 100, 100 on the screen with w:640 h:480 and show it
-	SDL_Window *win = SDL_CreateWindow("Hello World!", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+	SDL_Window *win = SDL_CreateWindow("Hello World!", 0, 1080-SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 	//Make sure creating our window went ok
 	if (win == NULL){
 		fprintf(stderr, "SDL_CreateWindow Error: %s\n", SDL_GetError());

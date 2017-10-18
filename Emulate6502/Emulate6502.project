@@ -26,6 +26,7 @@
     <File Name="rom_character.c"/>
     <File Name="rom_kernal.c"/>
     <File Name="vic.c"/>
+    <File Name="via.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="include">
     <File Name="cpu.h"/>
@@ -34,6 +35,7 @@
     <File Name="VIC-20.h"/>
     <File Name="graphics.h"/>
     <File Name="vic.h"/>
+    <File Name="via.h"/>
   </VirtualDirectory>
   <Settings Type="Static Library">
     <GlobalSettings>

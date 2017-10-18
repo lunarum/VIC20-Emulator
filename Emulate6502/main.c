@@ -92,7 +92,7 @@ int main_debugger(int argc, char **argv)
 //    memory_setPageType(0xC0, 0xDF, MEM_READ); /* Basic ROM */
     memory_setPageType(0xE0, 0xFF, MEM_READ); /* Kernel ROM */
     cpu_setCycleReset(71); /* VIC-PAL screenline cycle count */
-    cpu_RESET();
+    cpu_reset();
     for(bool run = true; run;) {
         printf(">");
         chars = INPUT_BUFFER_LENGTH;
@@ -154,7 +154,7 @@ int main_debugger(int argc, char **argv)
                 break;
             case 'R':
                 if(p[1] == 'E' && p[2] == 'S') {
-                    cpu_RESET();
+                    cpu_reset();
                     cpu_logStatus(RESULT_RESET);
                 }
                 break;

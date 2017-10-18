@@ -1,1 +1,1 @@
-./Debug/main.c.o ./Debug/cpu.c.o ./Debug/memory.c.o ./Debug/cpu_run.c.o ./Debug/VIC-20.c.o ./Debug/rom_basic.c.o ./Debug/rom_character.c.o ./Debug/rom_kernal.c.o ./Debug/vic.c.o   
+./Debug/main.c.o ./Debug/cpu.c.o ./Debug/memory.c.o ./Debug/cpu_run.c.o ./Debug/VIC-20.c.o ./Debug/rom_basic.c.o ./Debug/rom_character.c.o ./Debug/rom_kernal.c.o ./Debug/vic.c.o ./Debug/via.c.o   

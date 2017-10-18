@@ -1,7 +1,7 @@
 #ifndef VIC_H
 #define VIC_H
 
-#include "cpu.h"
+#include "memory.h"
 #include "graphics.h"
 
 /* Timings from http://www.antimon.org/dl/c64/code/stable.txt:
@@ -23,6 +23,6 @@
 */
 
 extern void vic_plot_scan_line();
-extern void vic_set_defaults();
+extern void vic_reset();
 
 #endif

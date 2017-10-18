@@ -84,30 +84,115 @@ unsigned color_palette[] = {
  *  254	  6144   24    1.5K    2K   192   96  13×14  12×16
  *  255	  7168   28    0.5K    3K    64   32   8×8    8×8
  */
-void vic_plot_scan_line() {
-    //read registers from memory
-    byte *memory            = memory_get_ptr(0);
-    unsigned offset_x       = memory[0x9000] & 0x7F;
-//    bool interlace_mode     = (memory[0x9000] & 0x80) ? true : false;
-    unsigned offset_y       = memory[0x9001];
-    word screen_address     = (memory[0x9002] & 0x80) << 2;
-    word color_address      = screen_address | 0x9400;
-    unsigned columns        = memory[0x9002] & 0x7F;
-    bool wide_characters    = (memory[0x9003] & 1) ? true : false;
-    unsigned rows           = (memory[0x9003] & 0x7F) >> 1;
-    unsigned scan_line      = (memory[0x9003] & 0x80) >> 7;
-    scan_line = (scan_line | memory[0x9004] << 1);
-    word character_address  = (memory[0x9005] & 0x07) << 10;
-    if(!(memory[0x9005] & 0x08))
-        character_address |= 0x8000;
-    screen_address |= (memory[0x9005] & 0x70) << 6;
-    if(!(memory[0x9005] & 0x80))
-        screen_address |= 0x8000;
-    unsigned auxilary_color = color_palette[memory[0x900E] >> 4];
-    unsigned screen_color   = color_palette[memory[0x900F] >> 4];
-    unsigned border_color   = color_palette[memory[0x900F] & 0b111];
-    bool inverted_mode      = (memory[0x900F] & 0b1000) ? false : true; // normal mode (1) or inverted mode (0)!!!
 
+static byte *memory;
+static bool dirty_register[0xF];
+static unsigned offset_x;
+//static bool interlace_mode;
+static unsigned offset_y;
+static word screen_address;
+static word color_address;
+static word character_address;
+static unsigned columns;
+static bool wide_characters;
+static unsigned rows;
+static unsigned scan_line;
+static unsigned auxilary_color;
+static unsigned screen_color;
+static unsigned border_color;
+static bool inverted_mode;
+ 
+byte vic_read_register(word address) {
+    byte value = memory[address], index = address & 0xF;
+
+//    if(address == 0x9003 || address == 0x9004)
+//        printf("Read $%04X", address);
+    if(dirty_register[index]) {
+//        putchar('*');
+        // Only scan_line registers can be changed
+        switch(address) {
+            case 0x9003:
+                value = (value & 0x7F) | ((scan_line & 1) << 7);
+                break;
+            case 0x9004:
+                value = (scan_line >> 1);
+                break;
+        }
+        memory[address] = value;
+        dirty_register[index] = false;
+    }
+//    if(address == 0x9003 || address == 0x9004)
+//        printf(" = $%02X\n", (unsigned)value);
+
+    return value;
+}
+
+void vic_write_register(word address, byte value) {
+    word temp_w;
+
+    switch(address) {
+        case 0x9000:
+            offset_x          = value & 0x7F;
+//            interlace_mode    = (value & 0x80) ? true : false;
+            break;
+        case 0x9001:
+            offset_y          = value;
+            break;
+        case 0x9002:
+            temp_w = ((value & 0x80) << 2);
+            screen_address    = (screen_address & 0xFDFF) | temp_w;
+            color_address     = 0x9400 | temp_w;
+            columns           = value & 0x7F;
+            break;
+        case 0x9003:
+            wide_characters   = (value & 1) ? true : false;
+            rows              = (value & 0x7F) >> 1;
+//            scan_line        = (value & 0x80) >> 7;
+            break;
+        case 0x9004:
+//            scan_line        = (scan_line | value << 1);
+            break;
+        case 0x9005:
+            character_address = (value & 0x07) << 10;
+            if(!(value & 0x08))
+                character_address |= 0x8000;
+            screen_address = (screen_address & 0x0200) | (value & 0x70) << 6;
+            if(!(value & 0x80))
+                screen_address |= 0x8000;
+            break;
+        case 0x9006:
+            break;
+        case 0x9007:
+            break;
+        case 0x9008:
+            break;
+        case 0x9009:
+            break;
+        case 0x900A:
+            break;
+        case 0x900B:
+            break;
+        case 0x900C:
+            break;
+        case 0x900D:
+            break;
+        case 0x900E:
+            auxilary_color    = color_palette[value >> 4];
+            break;
+        case 0x900F:
+            screen_color      = color_palette[value >> 4];
+            border_color      = color_palette[value & 0b111];
+            inverted_mode     = (value & 0b1000) ? false : true; // normal mode (1) or inverted mode (0)!!!
+            break;
+    }
+    // save for read
+    memory[address] = value;
+
+//    printf("%04X := %02X [char %04X, screen %04X, color %04X]\n", (unsigned)address, (unsigned)value,
+//        (unsigned)character_address, (unsigned)screen_address, (unsigned)color_address);
+}
+
+void vic_plot_scan_line() {
     unsigned min_y = offset_y << 1;
     unsigned min_x = offset_x << 1;
     unsigned max_y = min_y + (wide_characters ? (rows<<5) : (rows<<4));
@@ -256,28 +341,28 @@ void vic_plot_scan_line() {
         draw_screen();
         scan_line = 0;
     }
-
-    //copy registers to memory
-    memory[0x9003] = (memory[0x9003] & 0x7F) | ((scan_line & 1) << 7);
-    memory[0x9004] = scan_line >> 1;
+    dirty_register[3] = true;
+    dirty_register[4] = true;
 }
 
-void vic_set_defaults() {
-    byte *memory = memory_get_ptr(0);
-    memory[0x9000] = 12; // NTSC: 5
-    memory[0x9001] = 38; // NTSC: 25
-    memory[0x9002] = 150;
-    memory[0x9003] = 46;
-    memory[0x9004] = 0;
-    memory[0x9005] = 240;
-    memory[0x9006] = 0;
-    memory[0x9007] = 0;
-    memory[0x9008] = 255;
-    memory[0x9009] = 255;
-    memory[0x900A] = 0;
-    memory[0x900B] = 0;
-    memory[0x900C] = 0;
-    memory[0x900D] = 0;
-    memory[0x900E] = 0;
-    memory[0x900F] = 27;
+void vic_reset() {
+    memory = memory_get_ptr(0);
+    for(unsigned u = 0; u <= 0xF; ++u)
+        dirty_register[u] = false;
+//    memory[0x9000] = 12; // NTSC: 5
+//    memory[0x9001] = 38; // NTSC: 25
+//    memory[0x9002] = 150;
+//    memory[0x9003] = 46;
+//    memory[0x9004] = 0;
+//    memory[0x9005] = 240;
+//    memory[0x9006] = 0;
+//    memory[0x9007] = 0;
+//    memory[0x9008] = 255;
+//    memory[0x9009] = 255;
+//    memory[0x900A] = 0;
+//    memory[0x900B] = 0;
+//    memory[0x900C] = 0;
+//    memory[0x900D] = 0;
+//    memory[0x900E] = 0;
+//    memory[0x900F] = 27;
 }

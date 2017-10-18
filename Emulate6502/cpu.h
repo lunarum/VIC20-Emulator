@@ -78,8 +78,6 @@
 #define MEM_RESET      0xFFFC
 #define MEM_IRQ_BREAK  0xFFFE
 
-typedef enum { false = 0, true = !false } bool;
-
 #include "memory.h"
 
 typedef enum {RESULT_STEP, RESULT_NMI, RESULT_RESET, RESULT_IRQ, RESULT_ILLEGAL_INSTUCTION, RESULT_CYCLE_RESET} cpu_result;
@@ -98,7 +96,7 @@ extern int cycle_counter;
 extern int cycle_reset;
 
 extern void cpu_setCycleReset(int value);
-extern void cpu_RESET();
+extern void cpu_reset();
 extern void cpu_statusPush(void);
 extern void cpu_statusPull(void);
 extern void cpu_disassemble(word address);

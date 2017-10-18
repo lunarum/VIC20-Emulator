@@ -4,8 +4,10 @@
 #include "cpu.h"
 #include "memory.h"
 #include "vic.h"
+#include "via.h"
 
 enum memory_extensions {
+    RAM_NONE =  0,
     RAM_3K   =  1,
     RAM_8K_1 =  2,
     RAM_8K_2 =  4,

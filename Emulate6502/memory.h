@@ -31,19 +31,27 @@
 
  ************************************************************************/
 
+typedef enum { false = 0, true = !false } bool;
+
 #define MEM_PAGE_SIZE  0xFF
 #define MEM_MAX_PAGES  0xFF
 
 enum memory_type {
         MEM_READ  = 0x1,
         MEM_WRITE = 0x2,
-        MEM_IO    = 0x4
+        MEM_IO    = 0x4,
+};
+
+enum io_type {
+        IO_VIC    = 0x10,
+        IO_VIA    = 0x20
 };
 
 typedef unsigned char byte;
 typedef unsigned int word;
 
 static inline byte getPage(word address) { return address >> 8; }
+static inline byte getIndex(word address) { return address & 0xFF; }
 static inline word getAddress(byte lowByte, byte highByte) { return ((word)highByte) << 8 | lowByte; }
 
 extern byte *memory_get_ptr(word startAddress);
@@ -83,5 +91,10 @@ extern byte memory_getIndirectIndexedY();
 extern word memory_getRelativeAddress();
 
 extern void memory_dump(word address);
+
+extern byte vic_read_register(word address);
+extern void vic_write_register(word address, byte value);
+extern byte via_read_register(word address);
+extern void via_write_register(word address, byte value);
 
 #endif
