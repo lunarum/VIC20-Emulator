@@ -1,7 +1,7 @@
 #ifndef VIC_H
 #define VIC_H
 
-#include "memory.h"
+#include "cpu.h"
 #include "graphics.h"
 
 /* Timings from http://www.antimon.org/dl/c64/code/stable.txt:
@@ -21,6 +21,8 @@
  *    VIC-20  6561-101   4433618  4433618   1108405      71    312
  *    C64     6569      17734472  7881988    985248      63    312
 */
+
+#define VIC_COUNTER_CYCLES 71
 
 extern void vic_plot_scan_line();
 extern void vic_reset();

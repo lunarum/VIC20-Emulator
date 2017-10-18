@@ -78,9 +78,14 @@
 #define MEM_RESET      0xFFFC
 #define MEM_IRQ_BREAK  0xFFFE
 
+#define COUNTER_VIC  0
+#define COUNTER_VIA1 1
+#define COUNTER_VIA2 2
+#define MAX_COUNTERS 3
+
 #include "memory.h"
 
-typedef enum {RESULT_STEP, RESULT_NMI, RESULT_RESET, RESULT_IRQ, RESULT_ILLEGAL_INSTUCTION, RESULT_CYCLE_RESET} cpu_result;
+typedef enum {RESULT_STEP, RESULT_NMI, RESULT_RESET, RESULT_IRQ, RESULT_ILLEGAL_INSTUCTION} cpu_result;
 
 extern struct registers {
     byte A,      /*< Accumulator */
@@ -91,11 +96,13 @@ extern struct registers {
     bool PS_N, PS_V, PS_B, PS_D, PS_I, PS_Z, PS_C;
     byte cycles; /* cycles count of current instruction */
 } cpu;
-extern bool single_step;
-extern int cycle_counter;
-extern int cycle_reset;
 
-extern void cpu_setCycleReset(int value);
+extern bool single_step;
+extern struct counters {
+    unsigned counter;
+    void (*signal)();
+} counter[MAX_COUNTERS];
+
 extern void cpu_reset();
 extern void cpu_statusPush(void);
 extern void cpu_statusPull(void);

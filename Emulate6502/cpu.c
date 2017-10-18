@@ -5,20 +5,17 @@
 #include "opcodes.h"
 
 struct registers cpu;
-int cycle_reset = 100; /* no interrupts */
-int cycle_counter = 0;
+struct counters counter[MAX_COUNTERS];
 
-
-void cpu_setCycleReset(int value) {
-    if(value > 0)
-        cycle_reset = value;
-}
 
 void cpu_reset() {
     cpu.SP = MEM_PAGE_SIZE;
     cpu.PC = memory_get_vector(MEM_RESET);
     cpu.cycles = 0;
-    cycle_counter = cycle_reset;
+    for(unsigned u = 0; u < MAX_COUNTERS; ++u) {
+        counter[u].signal = NULL;
+        counter[u].counter = 0;
+    }
 }
 
 void cpu_statusPush(void) {

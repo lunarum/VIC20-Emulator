@@ -7,12 +7,10 @@ cpu_result cpu_run() {
     bool tmp_PS_C;
     byte opcode, value;
     word value_w, value_w2;
+    unsigned count_tmp;
+    void (*signal_func)();
 
     for(;;) {
-        if(cycle_counter < 0) {
-            cycle_counter += cycle_reset;
-            return RESULT_CYCLE_RESET;
-        }
         opcode = memory_getImmediate();
         switch(opcode) {
         case 0x00: /* BRK  */
@@ -1411,7 +1409,16 @@ cpu_result cpu_run() {
             cpu.cycles = 1;
             return RESULT_ILLEGAL_INSTUCTION;
         }
-        cycle_counter -= cpu.cycles;
+
+        for(value_w = 0; value_w < MAX_COUNTERS; ++value_w) {
+            signal_func = counter[value_w].signal;
+            if(signal_func) {
+                count_tmp = counter[value_w].counter;
+                counter[value_w].counter -= cpu.cycles;
+                if(counter[value_w].counter > count_tmp)
+                    (*signal_func)();
+            }
+        }
         if(single_step)
             return RESULT_STEP;
     }

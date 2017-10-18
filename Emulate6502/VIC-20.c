@@ -40,8 +40,7 @@ void vic20_config(enum memory_extensions extensions) {
     memory_setPageType(0xE0, 0xFF, MEM_READ); /* Kernel ROM */
     load_rom_from_array(kernal_rom, 0xE000, 0x2000);
 
+    cpu_reset();
     vic_reset();
     via_reset();
-    cpu_setCycleReset(71); /* VIC-PAL screenline cycle count */
-    cpu_reset();
 }

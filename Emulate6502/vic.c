@@ -343,12 +343,16 @@ void vic_plot_scan_line() {
     }
     dirty_register[3] = true;
     dirty_register[4] = true;
+    
+    counter[COUNTER_VIC].counter = VIC_COUNTER_CYCLES;
 }
 
 void vic_reset() {
     memory = memory_get_ptr(0);
     for(unsigned u = 0; u <= 0xF; ++u)
         dirty_register[u] = false;
+    counter[COUNTER_VIC].counter = VIC_COUNTER_CYCLES;
+    counter[COUNTER_VIC].signal = vic_plot_scan_line;
 //    memory[0x9000] = 12; // NTSC: 5
 //    memory[0x9001] = 38; // NTSC: 25
 //    memory[0x9002] = 150;

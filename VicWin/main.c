@@ -131,8 +131,6 @@ int main(int argc, char* argv[]){
     for(;;) {
         result = cpu_run();
 //        cpu_logStatus(result);
-        if(result == RESULT_CYCLE_RESET)
-            vic_plot_scan_line();
         if(SDL_PollEvent(&event)) {      
             if(event.type == SDL_QUIT || event.type == SDL_KEYDOWN)
                break;

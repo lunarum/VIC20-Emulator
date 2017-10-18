@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "cpu.h"
-#include "memory.h"
+#include "VIC-20.h"
 
 #define INPUT_BUFFER_LENGTH 256
 
@@ -77,22 +76,9 @@ int main_debugger(int argc, char **argv)
     cpu_result result;
 
 	printf("hello 6502 emulator world\n\n");
-    memory_setPageType(0x00, 0xDF, MEM_READ | MEM_WRITE); /* RAM */
-//    memory_setPageType(0x00, 0x03, MEM_READ | MEM_WRITE); /* 1K Low RAM */
-//    memory_setPageType(0x10, 0x1F, MEM_READ | MEM_WRITE); /* 4K Main RAM Screen memory 0x10-0x1D (>=8K Expansion RAM) or 0x1e-0x1F (standard)*/
-//    memory_setPageType(0x20, 0x3F, MEM_READ); /* 8K Expansion RAM-1 */
-//    memory_setPageType(0x40, 0x5F, MEM_READ); /* 8K Expansion RAM-2 */
-//    memory_setPageType(0x60, 0x7F, MEM_READ); /* 8K Expansion RAM-3 */
-//    memory_setPageType(0x80, 0x8F, MEM_READ); /* 4K Character ROM */
-//    memory_setPageType(0x90, 0x90, MEM_READ | MEM_WRITE | MEM_IO); /* 6561 VIC-1 I/O page */
-//    memory_setPageType(0x91, 0x91, MEM_READ | MEM_WRITE | MEM_IO); /* 6522 VIA (2x) I/O page */
-//    memory_setPageType(0x94, 0x95, MEM_READ | MEM_WRITE); /* 0,5K Colour RAM (>=8K Expansion RAM)*/
-//    memory_setPageType(0x96, 0x97, MEM_READ | MEM_WRITE); /* 0,5K Colour RAM (standard)*/
-//    memory_setPageType(0xA0, 0xBF, MEM_READ); /* Expansion ROM */
-//    memory_setPageType(0xC0, 0xDF, MEM_READ); /* Basic ROM */
-    memory_setPageType(0xE0, 0xFF, MEM_READ); /* Kernel ROM */
-    cpu_setCycleReset(71); /* VIC-PAL screenline cycle count */
-    cpu_reset();
+    // Default 5K VIC-20
+    vic20_config(0);
+
     for(bool run = true; run;) {
         printf(">");
         chars = INPUT_BUFFER_LENGTH;
@@ -154,7 +140,7 @@ int main_debugger(int argc, char **argv)
                 break;
             case 'R':
                 if(p[1] == 'E' && p[2] == 'S') {
-                    cpu_reset();
+                    vic20_config(0);
                     cpu_logStatus(RESULT_RESET);
                 }
                 break;
