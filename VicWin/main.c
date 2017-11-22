@@ -51,6 +51,14 @@ void draw_line(unsigned x1, unsigned y1, unsigned x2, unsigned y2, unsigned rgb2
 }
 
 void draw_screen() {
+    static Uint64 start = 0, second_count = 0;
+    Uint64 now = SDL_GetPerformanceCounter();
+    if((now - start) > second_count) {
+        printf("Frames %u fps\n", frame_counter);
+        frame_counter = 0;
+        start = now;
+        second_count = SDL_GetPerformanceFrequency();
+    }
     //Update the screen
     SDL_RenderPresent(renderer);
 }

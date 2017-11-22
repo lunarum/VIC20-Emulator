@@ -37,6 +37,7 @@ unsigned color_palette[] = {
     CLR_LIGHT_YELLOW
 };
 
+unsigned frame_counter = 0;
 
 /*
  * Location       Bits   Default value	Function
@@ -338,6 +339,7 @@ void vic_plot_scan_line() {
     }
 
     if(++scan_line >= FRAME_LINES) {
+        frame_counter++;
         draw_screen();
         scan_line = 0;
     }
