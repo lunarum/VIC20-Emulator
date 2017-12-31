@@ -14,7 +14,7 @@
       <Project Name="ROM2Source" ConfigName="Debug"/>
       <Project Name="DecimalMode" ConfigName="Debug"/>
     </WorkspaceConfiguration>
-    <WorkspaceConfiguration Name="Release" Selected="yes">
+    <WorkspaceConfiguration Name="Release" Selected="no">
       <Environment/>
       <Project Name="Emulator" ConfigName="Release"/>
       <Project Name="Test" ConfigName="Release"/>

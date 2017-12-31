@@ -87,7 +87,7 @@ unsigned frame_counter = 0;
  */
 
 static byte *memory;
-static bool dirty_register[0xF];
+static word dirty_registers = 0;
 static unsigned offset_x;
 //static bool interlace_mode;
 static unsigned offset_y;
@@ -104,13 +104,15 @@ static unsigned border_color;
 static bool inverted_mode;
  
 byte vic_read_register(word address) {
-    byte value = memory[address], index = address & 0xF;
+    byte value = 0;
+    word flag = (1 << (address & 0xF));
 
 //    if(address == 0x9003 || address == 0x9004)
 //        printf("Read $%04X", address);
-    if(dirty_register[index]) {
+    if(dirty_registers & flag) {
 //        putchar('*');
-        // Only scan_line registers can be changed
+        // Only scan_line registers can change and the rest is saved with vic_write_register in memory
+        // Therefore implementation of only the scan-line registers is necessary
         switch(address) {
             case 0x9003:
                 value = (value & 0x7F) | ((scan_line & 1) << 7);
@@ -120,8 +122,10 @@ byte vic_read_register(word address) {
                 break;
         }
         memory[address] = value;
-        dirty_register[index] = false;
+        dirty_registers ^= flag;
     }
+    else
+        value = memory[address];
 //    if(address == 0x9003 || address == 0x9004)
 //        printf(" = $%02X\n", (unsigned)value);
 
@@ -343,16 +347,28 @@ void vic_plot_scan_line() {
         draw_screen();
         scan_line = 0;
     }
-    dirty_register[3] = true;
-    dirty_register[4] = true;
-    
+    dirty_registers |= 0x18;    // set registers (bits) 3 and 4 as dirty
+
     counter[COUNTER_VIC].counter = VIC_COUNTER_CYCLES;
 }
 
 void vic_reset() {
     memory = memory_get_ptr(0);
-    for(unsigned u = 0; u <= 0xF; ++u)
-        dirty_register[u] = false;
+    dirty_registers = 0;
+    offset_x = 0;
+//  interlace_mode;
+    offset_y = 0;
+    screen_address = 0;
+    color_address = 0;
+    character_address = 0;
+    columns = 0;
+    wide_characters = 0;
+    rows = 0;
+    scan_line = 0;
+    auxilary_color = 0;
+    screen_color = 0;
+    border_color = 0;
+    inverted_mode = 0;
     counter[COUNTER_VIC].counter = VIC_COUNTER_CYCLES;
     counter[COUNTER_VIC].signal = vic_plot_scan_line;
 //    memory[0x9000] = 12; // NTSC: 5
