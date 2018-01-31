@@ -1,5 +1,7 @@
 #include "cpu.h"
 #include "memory.h"
+#include "via.h"
+
 
 bool single_step = false;
 
@@ -16,8 +18,9 @@ cpu_result cpu_run() {
         case 0x00: /* BRK  */
             cpu.cycles = 7;
             memory_stackPushAddress(cpu.PC+1);
-            cpu_statusPush();
             cpu.PS_B = true;
+            cpu_statusPush();
+            cpu.PS_I = true;
             cpu.PC = memory_get_vector(MEM_IRQ_BREAK);
             break;
         case 0x01: /* ORA (aa,X) */
@@ -1410,6 +1413,26 @@ cpu_result cpu_run() {
             return RESULT_ILLEGAL_INSTUCTION;
         }
 
+        if(via_count_NMI(cpu.cycles)) {
+            memory_stackPushAddress(cpu.PC+1);
+            memory_stackPush(cpu_get_state());
+            cpu.PS_I = true;
+            cpu.PC = memory_get_vector(MEM_NMI);
+            cpu.cycles += 7;
+            via_count_NMI(7);
+            break;
+        }
+        if(via_count_IRQ(cpu.cycles)) {
+            memory_stackPushAddress(cpu.PC+1);
+            cpu.PS_B = false;
+            memory_stackPush(cpu_get_state());
+            cpu.PS_I = true;
+            cpu.PC = memory_get_vector(MEM_IRQ_BREAK);
+            cpu.cycles += 7;
+            via_count_NMI(7);
+            via_count_IRQ(7);
+        }
+
         for(value_w = 0; value_w < MAX_COUNTERS; ++value_w) {
             signal_func = counter[value_w].signal;
             if(signal_func) {
@@ -1419,6 +1442,7 @@ cpu_result cpu_run() {
                     (*signal_func)();
             }
         }
+
         if(single_step)
             return RESULT_STEP;
     }

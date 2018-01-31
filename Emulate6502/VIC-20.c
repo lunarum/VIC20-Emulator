@@ -4,6 +4,7 @@ extern unsigned character_rom[];
 extern unsigned basic_rom[];
 extern unsigned kernal_rom[];
 
+
 void load_rom_from_array(const unsigned *source, word address, word length) {
     for(byte *memory = memory_get_ptr(address); length > 0; length -= 4) {
         unsigned u = *source++;

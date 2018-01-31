@@ -24,6 +24,23 @@
 
 #define VIC_COUNTER_CYCLES 71
 
+extern struct vic_registers {
+    unsigned offset_x;
+    //bool interlace_mode;
+    unsigned offset_y;
+    word screen_address;
+    word color_address;
+    word character_address;
+    unsigned columns;
+    bool wide_characters;
+    unsigned rows;
+    unsigned scan_line;
+    unsigned auxilary_color;
+    unsigned screen_color;
+    unsigned border_color;
+    bool inverted_mode;
+} vic;
+
 extern void vic_plot_scan_line();
 extern void vic_reset();
 

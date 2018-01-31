@@ -4,9 +4,8 @@
 #include "memory.h"
 #include "opcodes.h"
 
-struct registers cpu;
+struct cpu_registers cpu;
 struct counters counter[MAX_COUNTERS];
-
 
 void cpu_reset() {
     cpu.SP = MEM_PAGE_SIZE;

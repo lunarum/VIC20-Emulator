@@ -87,7 +87,7 @@
 
 typedef enum {RESULT_STEP, RESULT_NMI, RESULT_RESET, RESULT_IRQ, RESULT_ILLEGAL_INSTUCTION} cpu_result;
 
-extern struct registers {
+extern struct cpu_registers {
     byte A,      /*< Accumulator */
          X,      /*< X index */
          Y,      /*< Y index */
@@ -123,19 +123,6 @@ static inline byte cpu_get_state() {
         | ((cpu.PS_I) ? 0x04 : 0)
         | ((cpu.PS_Z) ? 0x02 : 0)
         | ((cpu.PS_C) ? 0x01 : 0));
-}
-
-static inline void cpu_IRQ() {
-    memory_stackPushAddress(cpu.PC+1);
-    memory_stackPush(cpu_get_state());
-    cpu.PS_B = false;
-    cpu.PC = memory_get_vector(MEM_IRQ_BREAK);
-}
-
-static inline void cpu_NMI() {
-    memory_stackPushAddress(cpu.PC+1);
-    memory_stackPush(cpu_get_state());
-    cpu.PC = memory_get_vector(MEM_NMI);
 }
 
 #endif

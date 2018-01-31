@@ -44,8 +44,8 @@ unsigned frame_counter = 0;
  *  hex   dec
  * $9000 36864	ABBBBBBB $0C Interlace mode / Screen origin (horizontal)
  * $9001 36865	CCCCCCCC $26 Screen origin (vertical)
- * $9002 36866	HDDDDDDD $16 Screen memory location / Number of columns
- * $9003 36867	GEEEEEEF $2E Raster value (lowest bit)/ Number of rows / Double character size
+ * $9002 36866	HDDDDDDD $16 Screen memory location / Number of vic.columns
+ * $9003 36867	GEEEEEEF $2E Raster value (lowest bit)/ Number of vic.rows / Double character size
  * $9004 36868	GGGGGGGG  -- Raster value
  * $9005 36869	HHHHIIII $F0 Screen memory location / Character memory location
  * $9006 36870	JJJJJJJJ $00 Light pen position (horizontal)
@@ -88,20 +88,8 @@ unsigned frame_counter = 0;
 
 static byte *memory;
 static word dirty_registers = 0;
-static unsigned offset_x;
-//static bool interlace_mode;
-static unsigned offset_y;
-static word screen_address;
-static word color_address;
-static word character_address;
-static unsigned columns;
-static bool wide_characters;
-static unsigned rows;
-static unsigned scan_line;
-static unsigned auxilary_color;
-static unsigned screen_color;
-static unsigned border_color;
-static bool inverted_mode;
+struct vic_registers vic;
+
  
 byte vic_read_register(word address) {
     byte value = 0;
@@ -111,18 +99,18 @@ byte vic_read_register(word address) {
 //        printf("Read $%04X", address);
     if(dirty_registers & flag) {
 //        putchar('*');
-        // Only scan_line registers can change and the rest is saved with vic_write_register in memory
+        // Only vic.scan_line registers can change and the rest is saved with vic_write_register in memory
         // Therefore implementation of only the scan-line registers is necessary
         switch(address) {
             case 0x9003:
-                value = (value & 0x7F) | ((scan_line & 1) << 7);
+                value = (value & 0x7F) | ((vic.scan_line & 1) << 7);
                 break;
             case 0x9004:
-                value = (scan_line >> 1);
+                value = (vic.scan_line >> 1);
                 break;
         }
         memory[address] = value;
-        dirty_registers ^= flag;
+        dirty_registers &= ~flag;
     }
     else
         value = memory[address];
@@ -137,33 +125,33 @@ void vic_write_register(word address, byte value) {
 
     switch(address) {
         case 0x9000:
-            offset_x          = value & 0x7F;
+            vic.offset_x          = value & 0x7F;
 //            interlace_mode    = (value & 0x80) ? true : false;
             break;
         case 0x9001:
-            offset_y          = value;
+            vic.offset_y          = value;
             break;
         case 0x9002:
             temp_w = ((value & 0x80) << 2);
-            screen_address    = (screen_address & 0xFDFF) | temp_w;
-            color_address     = 0x9400 | temp_w;
-            columns           = value & 0x7F;
+            vic.screen_address    = (vic.screen_address & 0xFDFF) | temp_w;
+            vic.color_address     = 0x9400 | temp_w;
+            vic.columns           = value & 0x7F;
             break;
         case 0x9003:
-            wide_characters   = (value & 1) ? true : false;
-            rows              = (value & 0x7F) >> 1;
-//            scan_line        = (value & 0x80) >> 7;
+            vic.wide_characters   = (value & 1) ? true : false;
+            vic.rows              = (value & 0x7F) >> 1;
+//            vic.scan_line        = (value & 0x80) >> 7;
             break;
         case 0x9004:
-//            scan_line        = (scan_line | value << 1);
+//            vic.scan_line        = (vic.scan_line | value << 1);
             break;
         case 0x9005:
-            character_address = (value & 0x07) << 10;
+            vic.character_address = (value & 0x07) << 10;
             if(!(value & 0x08))
-                character_address |= 0x8000;
-            screen_address = (screen_address & 0x0200) | (value & 0x70) << 6;
+                vic.character_address |= 0x8000;
+            vic.screen_address = (vic.screen_address & 0x0200) | (value & 0x70) << 6;
             if(!(value & 0x80))
-                screen_address |= 0x8000;
+                vic.screen_address |= 0x8000;
             break;
         case 0x9006:
             break;
@@ -182,45 +170,45 @@ void vic_write_register(word address, byte value) {
         case 0x900D:
             break;
         case 0x900E:
-            auxilary_color    = color_palette[value >> 4];
+            vic.auxilary_color    = color_palette[value >> 4];
             break;
         case 0x900F:
-            screen_color      = color_palette[value >> 4];
-            border_color      = color_palette[value & 0b111];
-            inverted_mode     = (value & 0b1000) ? false : true; // normal mode (1) or inverted mode (0)!!!
+            vic.screen_color      = color_palette[value >> 4];
+            vic.border_color      = color_palette[value & 0b111];
+            vic.inverted_mode     = (value & 0b1000) ? false : true; // normal mode (1) or inverted mode (0)!!!
             break;
     }
     // save for read
     memory[address] = value;
 
 //    printf("%04X := %02X [char %04X, screen %04X, color %04X]\n", (unsigned)address, (unsigned)value,
-//        (unsigned)character_address, (unsigned)screen_address, (unsigned)color_address);
+//        (unsigned)vic.character_address, (unsigned)vic.screen_address, (unsigned)vic.color_address);
 }
 
 void vic_plot_scan_line() {
-    unsigned min_y = offset_y << 1;
-    unsigned min_x = offset_x << 1;
-    unsigned max_y = min_y + (wide_characters ? (rows<<5) : (rows<<4));
-    unsigned max_x = min_x + (columns<<5);
-    unsigned line = scan_line << 1;
+    unsigned min_y = vic.offset_y << 1;
+    unsigned min_x = vic.offset_x << 1;
+    unsigned max_y = min_y + (vic.wide_characters ? (vic.rows<<5) : (vic.rows<<4));
+    unsigned max_x = min_x + (vic.columns<<5);
+    unsigned line = vic.scan_line << 1;
     
-//    if(!scan_line)
+//    if(!vic.scan_line)
 //        printf("chars=$%04X screen=$%04X color=$%04X ox=%03u oy=%03u rc=%02ux%02u mmx=%03u-%03u mmy=%03u-%03u bc=%02u sc=%02u ac=%02u\n",
-//            (unsigned)character_address,
-//            (unsigned)screen_address,
-//            (unsigned)color_address,
-//            offset_x, offset_y, rows, columns,
+//            (unsigned)vic.character_address,
+//            (unsigned)vic.screen_address,
+//            (unsigned)vic.color_address,
+//            vic.offset_x, vic.offset_y, vic.rows, vic.columns,
 //            min_x, max_x, min_y, max_y,
 //            (unsigned)(memory[0x900F] & 0b111), (unsigned)(memory[0x900F] >> 4), (unsigned)(memory[0x900E] >> 4));
-//    printf("plot(sl=%03u)", scan_line);
+//    printf("plot(sl=%03u)", vic.scan_line);
 
     if(line < min_y || line >= max_y) {
         if(line < SCREEN_HEIGHT) {
 //            printf("-B\n");
             // border
-            draw_line(0, line, SCREEN_WIDTH, line, border_color);
+            draw_line(0, line, SCREEN_WIDTH, line, vic.border_color);
             ++line;
-            draw_line(0, line, SCREEN_WIDTH, line, border_color);
+            draw_line(0, line, SCREEN_WIDTH, line, vic.border_color);
         }
 //        else
 //            printf("-O\n");
@@ -229,26 +217,26 @@ void vic_plot_scan_line() {
 //        printf("-S ");
         
         // Left border
-        draw_line(0, line, min_x, line, border_color);        
-        draw_line(0, line+1, min_x, line+1, border_color);        
+        draw_line(0, line, min_x, line, vic.border_color);        
+        draw_line(0, line+1, min_x, line+1, vic.border_color);        
         
         unsigned x = min_x;
-        unsigned row = wide_characters ? ((line - min_y) >> 5) : ((line - min_y) >> 4);
+        unsigned row = vic.wide_characters ? ((line - min_y) >> 5) : ((line - min_y) >> 4);
 //        printf("%02u [", row);
-        unsigned line_index = wide_characters ? ((scan_line - offset_y) & 0x0F) : ((scan_line - offset_y) & 0x07);
-        for(unsigned column = 0; column < columns; ++column) {            
-            unsigned char_index  = row*columns + column;
-            unsigned color       = memory[color_address + char_index];
+        unsigned line_index = vic.wide_characters ? ((vic.scan_line - vic.offset_y) & 0x0F) : ((vic.scan_line - vic.offset_y) & 0x07);
+        for(unsigned column = 0; column < vic.columns; ++column) {            
+            unsigned char_index  = row*vic.columns + column;
+            unsigned color       = memory[vic.color_address + char_index];
             bool     multi_color = (color & 0x08);
-            unsigned character   = memory[screen_address + char_index];
-            unsigned pixel_index = line_index + (wide_characters ? (character << 4) : (character << 3));
-            unsigned pixels      = memory[character_address + pixel_index];
+            unsigned character   = memory[vic.screen_address + char_index];
+            unsigned pixel_index = line_index + (vic.wide_characters ? (character << 4) : (character << 3));
+            unsigned pixels      = memory[vic.character_address + pixel_index];
 
 //            printf("%02X%c%u-%02X|", (unsigned)character, multi_color ? 'M' : 'H', color, pixels);
             color = color_palette[color & 0x07];
 
             if(multi_color) {
-                unsigned multi_color_palette[] = { screen_color, border_color, color, auxilary_color };
+                unsigned multi_color_palette[] = { vic.screen_color, vic.border_color, color, vic.auxilary_color };
                 x += 32;
                 unsigned x2 = x - 1;
                 unsigned x1 = x2 - 7;
@@ -274,10 +262,10 @@ void vic_plot_scan_line() {
                 draw_line(x1, line,   x2, line,   multi_color_palette[color]);
                 draw_line(x1, line+1, x2, line+1, multi_color_palette[color]);
             } else {
-                unsigned back_color = screen_color;
-                if(inverted_mode) {
+                unsigned back_color = vic.screen_color;
+                if(vic.inverted_mode) {
                     back_color = color;
-                    color = screen_color;
+                    color = vic.screen_color;
                 }
                 unsigned x2 = x + 31;
 
@@ -337,15 +325,15 @@ void vic_plot_scan_line() {
         }
 
         // right border
-        draw_line(max_x, line, SCREEN_WIDTH, line, border_color);        
-        draw_line(max_x, line+1, SCREEN_WIDTH, line+1, border_color);
+        draw_line(max_x, line, SCREEN_WIDTH, line, vic.border_color);        
+        draw_line(max_x, line+1, SCREEN_WIDTH, line+1, vic.border_color);
 //        printf("]\n");
     }
 
-    if(++scan_line >= FRAME_LINES) {
+    if(++vic.scan_line >= FRAME_LINES) {
         frame_counter++;
         draw_screen();
-        scan_line = 0;
+        vic.scan_line = 0;
     }
     dirty_registers |= 0x18;    // set registers (bits) 3 and 4 as dirty
 
@@ -355,20 +343,20 @@ void vic_plot_scan_line() {
 void vic_reset() {
     memory = memory_get_ptr(0);
     dirty_registers = 0;
-    offset_x = 0;
+    vic.offset_x = 0;
 //  interlace_mode;
-    offset_y = 0;
-    screen_address = 0;
-    color_address = 0;
-    character_address = 0;
-    columns = 0;
-    wide_characters = 0;
-    rows = 0;
-    scan_line = 0;
-    auxilary_color = 0;
-    screen_color = 0;
-    border_color = 0;
-    inverted_mode = 0;
+    vic.offset_y = 0;
+    vic.screen_address = 0;
+    vic.color_address = 0;
+    vic.character_address = 0;
+    vic.columns = 0;
+    vic.wide_characters = 0;
+    vic.rows = 0;
+    vic.scan_line = 0;
+    vic.auxilary_color = 0;
+    vic.screen_color = 0;
+    vic.border_color = 0;
+    vic.inverted_mode = 0;
     counter[COUNTER_VIC].counter = VIC_COUNTER_CYCLES;
     counter[COUNTER_VIC].signal = vic_plot_scan_line;
 //    memory[0x9000] = 12; // NTSC: 5
